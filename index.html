@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNDK Trading Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #090b0f;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .card {
+      max-width: 520px;
+      margin: 40px auto;
+      padding: 24px;
+      background: #12151b;
+      border: 1px solid #272b33;
+      border-radius: 20px;
+    }
+
+    .label {
+      color: #8b93a1;
+      font-size: 14px;
+    }
+
+    .symbol {
+      font-size: 26px;
+      font-weight: 800;
+      margin-top: 6px;
+    }
+
+    .price {
+      font-size: 48px;
+      font-weight: 800;
+      margin: 18px 0 4px;
+    }
+
+    .change {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .positive {
+      color: #38d996;
+    }
+
+    .negative {
+      color: #ff5d6c;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .metric {
+      background: #191d24;
+      padding: 14px;
+      border-radius: 12px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 5px;
+    }
+
+    #status {
+      margin-top: 20px;
+      color: #8b93a1;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <div class="label">MARKET DATA TEST</div>
+    <div class="symbol">SNDK · SanDisk</div>
+
+    <div id="price" class="price">Loading...</div>
+    <div id="change" class="change">Connecting to Alpaca...</div>
+
+    <div class="grid">
+      <div class="metric">
+        <div class="label">DAY LOW</div>
+        <div id="low" class="metric-value">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="label">DAY HIGH</div>
+        <div id="high" class="metric-value">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="label">VWAP</div>
+        <div id="vwap" class="metric-value">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="label">VOLUME · IEX</div>
+        <div id="volume" class="metric-value">—</div>
+      </div>
+    </div>
+
+    <div id="status">Waiting for market data...</div>
+  </div>
+
+<script>
+  const FUNCTION_URL = "https://otsbyahgetgedgcpumzk.supabase.co/functions/v1/alpaca-market-data";
+
+  async function loadSNDK() {
+    const status = document.getElementById("status");
+
+    try {
+      status.textContent = "Fetching SNDK market data...";
+
+      const response = await fetch(FUNCTION_URL);
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const result = await response.json();
+
+      // 目前 Supabase Function 回傳的是 diagnostic wrapper
+      const data = result.body
+        ? (typeof result.body === "string"
+            ? JSON.parse(result.body)
+            : result.body)
+        : result;
+
+      const price = data.latestTrade?.p ?? data.dailyBar?.c;
+      const previousClose = data.prevDailyBar?.c;
+
+      if (price == null) {
+        throw new Error("No SNDK price returned");
+      }
+
+      const change =
+        previousClose != null ? price - previousClose : null;
+
+      const changePercent =
+        previousClose != null
+          ? (change / previousClose) * 100
+          : null;
+
+      document.getElementById("price").textContent =
+        "$" + Number(price).toFixed(2);
+
+      const changeEl = document.getElementById("change");
+
+      if (change != null) {
+        const sign = change >= 0 ? "+" : "";
+
+        changeEl.textContent =
+          sign +
+          change.toFixed(2) +
+          "  (" +
+          sign +
+          changePercent.toFixed(2) +
+          "%)";
+
+        changeEl.className =
+          "change " + (change >= 0 ? "positive" : "negative");
+      }
+
+      document.getElementById("low").textContent =
+        data.dailyBar?.l != null
+          ? "$" + Number(data.dailyBar.l).toFixed(2)
+          : "—";
+
+      document.getElementById("high").textContent =
+        data.dailyBar?.h != null
+          ? "$" + Number(data.dailyBar.h).toFixed(2)
+          : "—";
+
+      document.getElementById("vwap").textContent =
+        data.dailyBar?.vw != null
+          ? "$" + Number(data.dailyBar.vw).toFixed(2)
+          : "—";
+
+      document.getElementById("volume").textContent =
+        data.dailyBar?.v != null
+          ? Number(data.dailyBar.v).toLocaleString()
+          : "—";
+
+      const marketTime =
+        data.latestTrade?.t ??
+        data.dailyBar?.t ??
+        null;
+
+      status.textContent =
+        "Alpaca IEX connected ✓" +
+        (marketTime
+          ? " · Data: " + new Date(marketTime).toLocaleString()
+          : "");
+
+    } catch (error) {
+      console.error(error);
+      document.getElementById("price").textContent = "ERROR";
+      document.getElementById("change").textContent =
+        "Unable to load SNDK";
+      status.textContent = String(error);
+    }
+  }
+
+  loadSNDK();
+
+  // 每 30 秒更新一次
+  setInterval(loadSNDK, 30000);
+</script>
+
+</body>
+</html>
