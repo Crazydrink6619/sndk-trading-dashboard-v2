@@ -81,14 +81,15 @@
     .decision-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
     .decision-head strong { font-size:18px; }
     .signals { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    .signal { padding:13px; border-radius:12px; background:#191d24; border:1px solid transparent; opacity:.42; }
+    .signal { position:relative; padding:13px; border-radius:12px; background:#191d24; border:1px solid #343a45; opacity:1; color:#fff; }
     .signal-name { font-size:17px; font-weight:800; }
-    .signal-copy { margin-top:4px; color:#9ba4b2; font-size:12px; line-height:1.45; }
-    .signal.active { opacity:1; color:#fff; transform:translateY(-1px); }
-    .signal[data-state="dance"].active { background:#123226; border-color:#38d996; }
-    .signal[data-state="catch"].active { background:#132b38; border-color:#36bffa; }
-    .signal[data-state="watch"].active { background:#342b14; border-color:#f4c84a; }
-    .signal[data-state="run"].active { background:#39191e; border-color:#ff5d6c; }
+    .signal-copy { margin-top:4px; color:#c2c8d2; font-size:12px; line-height:1.45; }
+    .signal.active { transform:translateY(-1px); box-shadow:0 0 0 1px rgba(255,255,255,.04),0 8px 20px rgba(0,0,0,.18); }
+    .signal.active::after { content:"ACTIVE"; position:absolute; top:8px; right:8px; padding:2px 6px; border-radius:999px; background:#252b35; color:#fff; font-size:9px; font-weight:800; letter-spacing:.05em; }
+    .signal[data-state="dance"].active { background:#1b2b24; border-color:#38d996; }
+    .signal[data-state="catch"].active { background:#1b2930; border-color:#36bffa; }
+    .signal[data-state="watch"].active { background:#2c291d; border-color:#f4c84a; }
+    .signal[data-state="run"].active { background:#2f2023; border-color:#ff5d6c; }
     .reason { margin-top:14px; font-size:14px; line-height:1.65; color:#d7dce5; }
     .trend-alignment { margin-top:12px; padding:10px 12px; background:#191d24; border-radius:10px; font-size:13px; font-weight:700; }
     .tech-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:14px; }
