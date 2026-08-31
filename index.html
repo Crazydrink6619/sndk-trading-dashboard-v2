@@ -81,9 +81,11 @@
     .decision-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
     .decision-head strong { font-size:18px; }
     .signals { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    .signal { padding:13px; border-radius:12px; background:#191d24; border:1px solid transparent; opacity:.42; }
+    .signal { padding:13px; border-radius:12px; background:#191d24; border:1px solid transparent; opacity:1; }
     .signal-name { font-size:17px; font-weight:800; }
-    .signal-copy { margin-top:4px; color:#9ba4b2; font-size:12px; line-height:1.45; }
+    .signal-score { margin-top:7px; font-size:22px; font-weight:900; line-height:1; letter-spacing:.2px; }
+    .signal-score span { font-size:12px; font-weight:700; color:#9ba4b2; }
+    .signal-copy { margin-top:6px; color:#9ba4b2; font-size:12px; line-height:1.45; }
     .signal.active { opacity:1; color:#fff; transform:translateY(-1px); }
     .signal[data-state="dance"].active { background:#123226; border-color:#38d996; }
     .signal[data-state="catch"].active { background:#132b38; border-color:#36bffa; }
@@ -159,10 +161,10 @@
         <span id="activeState">👀 觀察 ACTIVE</span>
       </div>
       <div class="signals">
-        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-copy">偏強／順勢進攻</div></div>
-        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-copy">回檔承接／結構未破</div></div>
-        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-copy">矛盾／不足／資料異常</div></div>
-        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-copy">結構轉弱／風險升高</div></div>
+        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span>/ 100</span></div><div class="signal-copy">偏強／順勢進攻</div></div>
+        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span>/ 100</span></div><div class="signal-copy">回檔承接／結構未破</div></div>
+        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span>/ 100</span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
+        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span>/ 100</span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
       </div>
       <div id="decisionReason" class="reason">正在等待可驗證的即時資料。</div>
       <div id="trendAlignment" class="trend-alignment">1Min ↔ 5Min：等待資料</div>
@@ -322,6 +324,10 @@
     return { label, passed: available ? passed : null };
   }
 
+  function scorePercent(matches, total) {
+    return Math.round((matches / total) * 100);
+  }
+
   function decideState(model, healthy) {
     const c = {
       aboveVwap: model.vwapDistancePct != null && model.vwapDistancePct >= 0.15,
@@ -340,23 +346,40 @@
         model.five.latestClose >= model.five.ema20 && (model.five.ema9 == null || model.five.ema9 >= model.five.ema20),
     };
 
-    const danceScore = [c.aboveVwap,c.strongZone,c.oneBull,c.fiveBull,c.rsiStrong,c.volumeStrong,model.alignment==="bullish"].filter(Boolean).length;
-    const runScore = [c.belowVwap,c.weakZone,c.oneBear,c.fiveBear,c.rsiWeak,model.alignment==="bearish"].filter(Boolean).length;
-    const catchScore = [c.nearVwap,c.fiveStructureHeld,c.oneBull,
+    const danceMatches = [c.aboveVwap,c.strongZone,c.oneBull,c.fiveBull,c.rsiStrong,c.volumeStrong,model.alignment==="bullish"].filter(Boolean).length;
+    const runMatches = [c.belowVwap,c.weakZone,c.oneBear,c.fiveBear,c.rsiWeak,model.alignment==="bearish"].filter(Boolean).length;
+    const catchMatches = [c.nearVwap,c.fiveStructureHeld,c.oneBull,
       model.rangePosition != null && model.rangePosition >= 25 && model.rangePosition <= 65,
       model.one.rsi14 != null && model.one.rsi14 >= 45].filter(Boolean).length;
+
+    const danceScore = scorePercent(danceMatches, 7);
+    const catchScore = scorePercent(catchMatches, 5);
+    const runScore = scorePercent(runMatches, 6);
+    const directionalConfidence = Math.max(danceScore, catchScore, runScore);
+    const alignmentNeutral = model.alignment === "mixed";
+    const nearMidRange = model.rangePosition != null && model.rangePosition >= 35 && model.rangePosition <= 65;
+    const nearVwapOrMixed = c.nearVwap || alignmentNeutral;
+    const watchMatches = [
+      directionalConfidence < 60,
+      nearVwapOrMixed,
+      nearMidRange,
+      !c.volumeStrong,
+      !c.oneBull && !c.oneBear,
+      !c.fiveBull && !c.fiveBear,
+    ].filter(Boolean).length;
+    const watchScore = scorePercent(watchMatches, 6);
 
     let state = "watch";
     let reason = "訊號矛盾、強度不足，或關鍵指標尚未齊全，維持觀察。";
     if (!healthy) {
       reason = "資料不是最新 LIVE 狀態，禁止用舊數據產生進攻訊號。";
-    } else if (runScore >= 4 && c.belowVwap && (c.fiveBear || c.weakZone)) {
+    } else if (runMatches >= 4 && c.belowVwap && (c.fiveBear || c.weakZone)) {
       state = "run";
       reason = "價格跌破 VWAP，且 5Min 結構或日內位置同步轉弱；風險條件達標。";
-    } else if (danceScore >= 5 && c.aboveVwap && c.oneBull && c.fiveBull) {
+    } else if (danceMatches >= 5 && c.aboveVwap && c.oneBull && c.fiveBull) {
       state = "dance";
       reason = "價格、VWAP、1Min 與 5Min 動能形成偏多共振；順勢進攻條件達標。";
-    } else if (catchScore >= 3 && c.nearVwap && c.fiveStructureHeld && !c.fiveBear) {
+    } else if (catchMatches >= 3 && c.nearVwap && c.fiveStructureHeld && !c.fiveBear) {
       state = "catch";
       reason = "價格回到 VWAP 附近，但 5Min EMA20 結構仍守住，短線出現承接條件。";
     }
@@ -375,7 +398,7 @@
         condition("價格低於 VWAP -0.35%", c.belowVwap, model.vwapDistancePct != null),
         condition("1Min 與 5Min 同向", model.alignment !== "mixed", model.one.trend !== "neutral" && model.five.trend !== "neutral"),
       ],
-      scores: { danceScore, catchScore, runScore },
+      scores: { danceScore, catchScore, watchScore, runScore },
     };
   }
 
@@ -417,7 +440,11 @@
     document.querySelectorAll(".signal").forEach((el) => el.classList.toggle("active",el.dataset.state===decision.state));
     const names={dance:"🕺 蹦迪",catch:"🤲 接妹",watch:"👀 觀察",run:"🏃 烙跑"};
     setText("activeState",names[decision.state]+" ACTIVE");
-    setText("decisionReason",decision.reason+"（蹦迪 "+decision.scores.danceScore+"/7・接妹 "+decision.scores.catchScore+"/5・烙跑 "+decision.scores.runScore+"/6）");
+    setText("score-dance",decision.scores.danceScore);
+    setText("score-catch",decision.scores.catchScore);
+    setText("score-watch",decision.scores.watchScore);
+    setText("score-run",decision.scores.runScore);
+    setText("decisionReason",decision.reason);
     setText("trendAlignment","1Min ↔ 5Min："+(model.alignment==="bullish"?"同向偏多":model.alignment==="bearish"?"同向偏空":"不一致／中性"));
 
     setText("ema9-1m",fmt(model.one.ema9)); setText("ema20-1m",fmt(model.one.ema20));
