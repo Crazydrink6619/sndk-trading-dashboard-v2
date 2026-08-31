@@ -83,8 +83,11 @@
     .signals { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
     .signal { padding:13px; border-radius:12px; background:#191d24; border:1px solid transparent; opacity:1; }
     .signal-name { font-size:17px; font-weight:800; }
-    .signal-score { margin-top:7px; font-size:22px; font-weight:900; line-height:1; letter-spacing:.2px; }
-    .signal-score span { font-size:12px; font-weight:700; color:#9ba4b2; }
+    .signal-score { margin-top:7px; display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; font-size:22px; font-weight:900; line-height:1; letter-spacing:.2px; }
+    .signal-score .score-max { font-size:12px; font-weight:700; color:#9ba4b2; }
+    .signal-delta { font-size:13px; font-weight:900; color:#9ba4b2; }
+    .signal-delta.positive { color:#38d996; }
+    .signal-delta.negative { color:#ff5d6c; }
     .signal-copy { margin-top:6px; color:#9ba4b2; font-size:12px; line-height:1.45; }
     .signal.active { opacity:1; color:#fff; transform:translateY(-1px); }
     .signal[data-state="dance"].active { background:#123226; border-color:#38d996; }
@@ -161,10 +164,10 @@
         <span id="activeState">👀 觀察 ACTIVE</span>
       </div>
       <div class="signals">
-        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span>/ 100</span></div><div class="signal-copy">偏強／順勢進攻</div></div>
-        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span>/ 100</span></div><div class="signal-copy">回檔承接／結構未破</div></div>
-        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span>/ 100</span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
-        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span>/ 100</span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
+        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span class="score-max">/ 100</span><span id="delta-dance" class="signal-delta">—</span></div><div class="signal-copy">偏強／順勢進攻</div></div>
+        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span class="score-max">/ 100</span><span id="delta-catch" class="signal-delta">—</span></div><div class="signal-copy">回檔承接／結構未破</div></div>
+        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span class="score-max">/ 100</span><span id="delta-watch" class="signal-delta">—</span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
+        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span class="score-max">/ 100</span><span id="delta-run" class="signal-delta">—</span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
       </div>
       <div id="decisionReason" class="reason">正在等待可驗證的即時資料。</div>
       <div id="trendAlignment" class="trend-alignment">1Min ↔ 5Min：等待資料</div>
@@ -204,6 +207,7 @@
   let lastSuccessAt = null;
   let lastMarketAt = null;
   let lastModel = null;
+  let previousScores = null;
 
   function unwrapPayload(result) {
     let payload = result;
@@ -402,12 +406,34 @@
     };
   }
 
+  function scoreDeltas(scores) {
+    if (!previousScores) return { dance: null, catch: null, watch: null, run: null };
+    return {
+      dance: scores.danceScore - previousScores.danceScore,
+      catch: scores.catchScore - previousScores.catchScore,
+      watch: scores.watchScore - previousScores.watchScore,
+      run: scores.runScore - previousScores.runScore,
+    };
+  }
+
   function fmt(value, digits = 2, suffix = "") {
     return Number.isFinite(value) ? value.toFixed(digits) + suffix : "—";
   }
 
   function setText(id, value) {
     document.getElementById(id).textContent = value;
+  }
+
+  function setDelta(state, value) {
+    const el = document.getElementById("delta-" + state);
+    el.classList.remove("positive", "negative");
+    if (!Number.isFinite(value)) {
+      el.textContent = "—";
+      return;
+    }
+    el.textContent = value > 0 ? "+" + value : String(value);
+    if (value > 0) el.classList.add("positive");
+    else if (value < 0) el.classList.add("negative");
   }
 
   function renderHealth(type, message) {
@@ -419,7 +445,7 @@
     setText("healthTime", "接收 " + success + " · 市場資料 " + market);
   }
 
-  function renderMarketData(model, decision, healthy) {
+  function renderMarketData(model, decision, healthy, deltas = null) {
     const price = model.price;
     if (!Number.isFinite(price)) throw new Error("No SNDK price returned");
     setText("price", "$" + price.toFixed(2));
@@ -444,6 +470,12 @@
     setText("score-catch",decision.scores.catchScore);
     setText("score-watch",decision.scores.watchScore);
     setText("score-run",decision.scores.runScore);
+    if (deltas) {
+      setDelta("dance",deltas.dance);
+      setDelta("catch",deltas.catch);
+      setDelta("watch",deltas.watch);
+      setDelta("run",deltas.run);
+    }
     setText("decisionReason",decision.reason);
     setText("trendAlignment","1Min ↔ 5Min："+(model.alignment==="bullish"?"同向偏多":model.alignment==="bearish"?"同向偏空":"不一致／中性"));
 
@@ -486,9 +518,17 @@
       const healthy=lastMarketAt!=null && Date.now()-lastMarketAt<=STALE_AFTER_MS;
       const model=buildTechnicalModel(data);
       const decision=decideState(model,healthy);
+      if (!healthy) {
+        lastModel=model;
+        renderMarketData(model,decision,false);
+        renderHealth("stale","市場資料超過 3 分鐘");
+        return;
+      }
+      const deltas=scoreDeltas(decision.scores);
       lastModel=model;
-      renderMarketData(model,decision,healthy);
-      renderHealth(healthy?"live":"stale",healthy?"資料正常":"市場資料超過 3 分鐘");
+      renderMarketData(model,decision,true,deltas);
+      previousScores={ ...decision.scores };
+      renderHealth("live","資料正常");
     } catch(error) {
       const message=error?.name==="AbortError"?"request timeout":(error?.message||String(error));
       renderHealth("error",message);
