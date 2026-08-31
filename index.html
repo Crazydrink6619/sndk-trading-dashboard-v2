@@ -294,9 +294,8 @@
     const marketTime = latestTrade?.t ?? latest1Min?.t ?? latest5Min?.t ?? dailyBar?.t ?? null;
     return {
       price, marketTime, dailyBar, prevDailyBar, bars1Min, bars5Min,
-      fallback1MinIndicators: payload.timeframes?.["1Min"]?.indicators ?? null,
-      fallback5MinIndicators:
-        payload.timeframes?.["5Min"]?.indicators ?? payload.indicators ?? null,
+      fallback1MinIndicators: payload.timeframes?.["1Min"]?.indicators ?? payload.indicators?.["1Min"] ?? null,
+      fallback5MinIndicators: payload.timeframes?.["5Min"]?.indicators ?? payload.indicators?.["5Min"] ?? null,
       feed: payload.feed ?? "iex", version: payload.version ?? (payload.indicators ? "0.3" : null),
     };
   }
