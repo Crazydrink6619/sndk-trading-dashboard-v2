@@ -263,7 +263,8 @@
     const ema20 = calculateEMA(closes, 20) ?? finite(fallbackIndicators?.ema20);
     const rsi14 = calculateRSI(closes, 14) ?? finite(fallbackIndicators?.rsi14);
     const momentumPct = latestClose != null && previousClose
-      ? ((latestClose - previousClose) / previousClose) * 100 : null;
+      ? ((latestClose - previousClose) / previousClose) * 100
+      : finite(fallbackIndicators?.momentumPct);
     let trend = "neutral";
     if (latestClose != null && ema9 != null && ema20 != null) {
       if (latestClose > ema9 && ema9 > ema20) trend = "bullish";
@@ -287,13 +288,15 @@
     const marketTime = latestTrade?.t ?? latest1Min?.t ?? latest5Min?.t ?? dailyBar?.t ?? null;
     return {
       price, marketTime, dailyBar, prevDailyBar, bars1Min, bars5Min,
-      fallback5MinIndicators: payload.indicators ?? null,
+      fallback1MinIndicators: payload.timeframes?.["1Min"]?.indicators ?? null,
+      fallback5MinIndicators:
+        payload.timeframes?.["5Min"]?.indicators ?? payload.indicators ?? null,
       feed: payload.feed ?? "iex", version: payload.version ?? (payload.indicators ? "0.3" : null),
     };
   }
 
   function buildTechnicalModel(data) {
-    const one = timeframeMetrics(data.bars1Min);
+    const one = timeframeMetrics(data.bars1Min, data.fallback1MinIndicators);
     const five = timeframeMetrics(data.bars5Min, data.fallback5MinIndicators);
     const price = finite(data.price);
     const previousClose = finite(data.prevDailyBar?.c);
