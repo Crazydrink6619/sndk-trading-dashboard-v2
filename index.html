@@ -119,11 +119,15 @@
 
   async function loadSNDK() {
     const status = document.getElementById("status");
+    const controller = new AbortController();
+    const requestTimeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
       status.textContent = "Fetching SNDK market data...";
 
-      const response = await fetch(FUNCTION_URL);
+      const response = await fetch(FUNCTION_URL, {
+        signal: controller.signal,
+      });
 
       if (!response.ok) {
         throw new Error("HTTP " + response.status);
@@ -210,13 +214,48 @@
       document.getElementById("change").textContent =
         "Unable to load SNDK";
       status.textContent = String(error);
+    } finally {
+      clearTimeout(requestTimeoutId);
     }
   }
 
-  loadSNDK();
+  const POLL_INTERVAL_MS = 30000;
+  let pollingStarted = false;
+  let pollTimerId = null;
+  let pollingGeneration = 0;
 
-  // 每 30 秒更新一次
-  setInterval(loadSNDK, 30000);
+  async function pollSNDK() {
+    if (pollingStarted) return;
+
+    pollingStarted = true;
+    const generation = ++pollingGeneration;
+
+    const runPollingCycle = async () => {
+      try {
+        await loadSNDK();
+      } catch (error) {
+        console.error("Unexpected polling error", error);
+      } finally {
+        if (pollingStarted && generation === pollingGeneration) {
+          pollTimerId = setTimeout(runPollingCycle, POLL_INTERVAL_MS);
+        }
+      }
+    };
+
+    await runPollingCycle();
+  }
+
+  function stopPolling() {
+    pollingStarted = false;
+    pollingGeneration++;
+
+    if (pollTimerId !== null) {
+      clearTimeout(pollTimerId);
+      pollTimerId = null;
+    }
+  }
+
+  pollSNDK();
 </script>
 
 </body>
