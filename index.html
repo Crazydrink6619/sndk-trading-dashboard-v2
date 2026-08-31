@@ -76,6 +76,7 @@
       margin-top: 20px;
       color: #8b93a1;
       font-size: 13px;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -83,7 +84,7 @@
 <body>
 
   <div class="card">
-    <div class="label">MARKET DATA TEST</div>
+    <div class="label">LIVE MARKET DATA · ALPACA IEX</div>
     <div class="symbol">SNDK · SanDisk</div>
 
     <div id="price" class="price">Loading...</div>
@@ -116,146 +117,239 @@
 
 <script>
   const FUNCTION_URL = "https://otsbyahgetgedgcpumzk.supabase.co/functions/v1/alpaca-market-data";
+  const POLL_INTERVAL_MS = 5000;
+  const REQUEST_TIMEOUT_MS = 10000;
+
+  let pollTimerId = null;
+  let requestInFlight = false;
+
+  function unwrapPayload(result) {
+    let payload = result;
+
+    // Older diagnostic wrapper: { body: "{...}" } or { body: {...} }
+    if (payload && payload.body != null) {
+      payload = typeof payload.body === "string"
+        ? JSON.parse(payload.body)
+        : payload.body;
+    }
+
+    if (!payload || typeof payload !== "object") {
+      throw new Error("Invalid market-data response");
+    }
+
+    return payload;
+  }
+
+  function normalizeMarketData(payload) {
+    // v0.3/current: market fields are top-level.
+    // v0.4: market fields live under payload.snapshot.
+    const snapshot =
+      payload.snapshot && typeof payload.snapshot === "object"
+        ? payload.snapshot
+        : payload;
+
+    const latest1Min = payload.latest?.["1Min"] ?? null;
+    const latest5Min = payload.latest?.["5Min"] ?? null;
+
+    const latestTrade =
+      snapshot.latestTrade ??
+      payload.latestTrade ??
+      null;
+
+    const dailyBar =
+      snapshot.dailyBar ??
+      payload.dailyBar ??
+      null;
+
+    const prevDailyBar =
+      snapshot.prevDailyBar ??
+      payload.prevDailyBar ??
+      null;
+
+    // Prefer the latest trade. Fall back to newest minute/bar close so the
+    // dashboard still shows a live-ish price when a snapshot omits latestTrade.
+    const price =
+      latestTrade?.p ??
+      latest1Min?.c ??
+      latest5Min?.c ??
+      dailyBar?.c ??
+      null;
+
+    const marketTime =
+      latestTrade?.t ??
+      latest1Min?.t ??
+      latest5Min?.t ??
+      dailyBar?.t ??
+      null;
+
+    return {
+      price,
+      marketTime,
+      dailyBar,
+      prevDailyBar,
+      feed: payload.feed ?? "iex",
+      version: payload.version ?? null,
+    };
+  }
+
+  function setMetric(id, value, options = {}) {
+    const el = document.getElementById(id);
+    if (value == null || !Number.isFinite(Number(value))) {
+      el.textContent = "—";
+      return;
+    }
+
+    const number = Number(value);
+    if (options.currency) {
+      el.textContent = "$" + number.toFixed(2);
+    } else if (options.integer) {
+      el.textContent = Math.round(number).toLocaleString();
+    } else {
+      el.textContent = String(number);
+    }
+  }
+
+  function renderMarketData(data) {
+    const price = Number(data.price);
+    if (!Number.isFinite(price)) {
+      throw new Error("No SNDK price returned");
+    }
+
+    const previousClose = Number(data.prevDailyBar?.c);
+    const hasPreviousClose = Number.isFinite(previousClose) && previousClose !== 0;
+
+    document.getElementById("price").textContent = "$" + price.toFixed(2);
+
+    const changeEl = document.getElementById("change");
+    if (hasPreviousClose) {
+      const change = price - previousClose;
+      const changePercent = (change / previousClose) * 100;
+      const sign = change >= 0 ? "+" : "";
+
+      changeEl.textContent =
+        `${sign}${change.toFixed(2)}  (${sign}${changePercent.toFixed(2)}%)`;
+      changeEl.className =
+        "change " + (change >= 0 ? "positive" : "negative");
+    } else {
+      changeEl.textContent = "Live price connected";
+      changeEl.className = "change";
+    }
+
+    setMetric("low", data.dailyBar?.l, { currency: true });
+    setMetric("high", data.dailyBar?.h, { currency: true });
+    setMetric("vwap", data.dailyBar?.vw, { currency: true });
+    setMetric("volume", data.dailyBar?.v, { integer: true });
+
+    const parts = ["Alpaca IEX connected ✓"];
+
+    if (data.marketTime) {
+      const marketDate = new Date(data.marketTime);
+      if (!Number.isNaN(marketDate.getTime())) {
+        parts.push("Market: " + marketDate.toLocaleString("zh-TW", {
+          hour12: false,
+        }));
+      }
+    }
+
+    parts.push("Updated: " + new Date().toLocaleTimeString("zh-TW", {
+      hour12: false,
+    }));
+
+    if (data.version) {
+      parts.push("API " + data.version);
+    }
+
+    document.getElementById("status").textContent = parts.join(" · ");
+  }
 
   async function loadSNDK() {
+    if (requestInFlight) return;
+    requestInFlight = true;
+
     const status = document.getElementById("status");
     const controller = new AbortController();
-    const requestTimeoutId = setTimeout(() => controller.abort(), 10000);
+    const requestTimeoutId = setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT_MS,
+    );
 
     try {
-      status.textContent = "Fetching SNDK market data...";
+      status.textContent = "Fetching live SNDK market data...";
 
-      const response = await fetch(FUNCTION_URL, {
+      const response = await fetch(FUNCTION_URL + "?t=" + Date.now(), {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+        },
         signal: controller.signal,
       });
 
+      const text = await response.text();
+      let result;
+
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(`HTTP ${response.status}: invalid JSON`);
+      }
+
       if (!response.ok) {
-        throw new Error("HTTP " + response.status);
+        const payload = unwrapPayload(result);
+        throw new Error(
+          payload.error ||
+          `Market data request failed (HTTP ${response.status})`,
+        );
       }
 
-      const result = await response.json();
+      const payload = unwrapPayload(result);
 
-      // 目前 Supabase Function 回傳的是 diagnostic wrapper
-      const data = result.body
-        ? (typeof result.body === "string"
-            ? JSON.parse(result.body)
-            : result.body)
-        : result;
-
-      const price = data.latestTrade?.p ?? data.dailyBar?.c;
-      const previousClose = data.prevDailyBar?.c;
-
-      if (price == null) {
-        throw new Error("No SNDK price returned");
+      if (payload.ok === false) {
+        throw new Error(payload.error || "Alpaca market-data request failed");
       }
 
-      const change =
-        previousClose != null ? price - previousClose : null;
-
-      const changePercent =
-        previousClose != null
-          ? (change / previousClose) * 100
-          : null;
-
-      document.getElementById("price").textContent =
-        "$" + Number(price).toFixed(2);
-
-      const changeEl = document.getElementById("change");
-
-      if (change != null) {
-        const sign = change >= 0 ? "+" : "";
-
-        changeEl.textContent =
-          sign +
-          change.toFixed(2) +
-          "  (" +
-          sign +
-          changePercent.toFixed(2) +
-          "%)";
-
-        changeEl.className =
-          "change " + (change >= 0 ? "positive" : "negative");
-      }
-
-      document.getElementById("low").textContent =
-        data.dailyBar?.l != null
-          ? "$" + Number(data.dailyBar.l).toFixed(2)
-          : "—";
-
-      document.getElementById("high").textContent =
-        data.dailyBar?.h != null
-          ? "$" + Number(data.dailyBar.h).toFixed(2)
-          : "—";
-
-      document.getElementById("vwap").textContent =
-        data.dailyBar?.vw != null
-          ? "$" + Number(data.dailyBar.vw).toFixed(2)
-          : "—";
-
-      document.getElementById("volume").textContent =
-        data.dailyBar?.v != null
-          ? Number(data.dailyBar.v).toLocaleString()
-          : "—";
-
-      const marketTime =
-        data.latestTrade?.t ??
-        data.dailyBar?.t ??
-        null;
-
-      status.textContent =
-        "Alpaca IEX connected ✓" +
-        (marketTime
-          ? " · Data: " + new Date(marketTime).toLocaleString()
-          : "");
-
+      renderMarketData(normalizeMarketData(payload));
     } catch (error) {
       console.error(error);
-      document.getElementById("price").textContent = "ERROR";
-      document.getElementById("change").textContent =
-        "Unable to load SNDK";
-      status.textContent = String(error);
+
+      const message = error?.name === "AbortError"
+        ? "Market data request timed out"
+        : (error?.message || String(error));
+
+      // Keep the last valid price on screen during a temporary API hiccup.
+      if (document.getElementById("price").textContent === "Loading...") {
+        document.getElementById("price").textContent = "ERROR";
+        document.getElementById("change").textContent = "Unable to load SNDK";
+      }
+
+      status.textContent = "Connection error · " + message;
     } finally {
       clearTimeout(requestTimeoutId);
+      requestInFlight = false;
     }
   }
 
-  const POLL_INTERVAL_MS = 30000;
-  let pollingStarted = false;
-  let pollTimerId = null;
-  let pollingGeneration = 0;
-
-  async function pollSNDK() {
-    if (pollingStarted) return;
-
-    pollingStarted = true;
-    const generation = ++pollingGeneration;
-
-    const runPollingCycle = async () => {
-      try {
-        await loadSNDK();
-      } catch (error) {
-        console.error("Unexpected polling error", error);
-      } finally {
-        if (pollingStarted && generation === pollingGeneration) {
-          pollTimerId = setTimeout(runPollingCycle, POLL_INTERVAL_MS);
-        }
-      }
-    };
-
-    await runPollingCycle();
-  }
-
-  function stopPolling() {
-    pollingStarted = false;
-    pollingGeneration++;
-
+  function scheduleNextPoll() {
     if (pollTimerId !== null) {
       clearTimeout(pollTimerId);
-      pollTimerId = null;
     }
+
+    pollTimerId = setTimeout(async () => {
+      if (!document.hidden) {
+        await loadSNDK();
+      }
+      scheduleNextPoll();
+    }, POLL_INTERVAL_MS);
   }
 
-  pollSNDK();
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      loadSNDK();
+    }
+  });
+
+  loadSNDK();
+  scheduleNextPoll();
 </script>
 
 </body>
