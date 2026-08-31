@@ -88,6 +88,7 @@
     .signal-delta { font-size:13px; font-weight:900; color:#9ba4b2; }
     .signal-delta.positive { color:#38d996; }
     .signal-delta.negative { color:#ff5d6c; }
+    .signal-light { font-size:18px; line-height:1; filter:saturate(1.15); }
     .signal-copy { margin-top:6px; color:#9ba4b2; font-size:12px; line-height:1.45; }
     .signal.active { opacity:1; color:#fff; transform:translateY(-1px); }
     .signal[data-state="dance"].active { background:#123226; border-color:#38d996; }
@@ -164,10 +165,10 @@
         <span id="activeState">👀 觀察 ACTIVE</span>
       </div>
       <div class="signals">
-        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span class="score-max">/ 100</span><span id="delta-dance" class="signal-delta">—</span></div><div class="signal-copy">偏強／順勢進攻</div></div>
-        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span class="score-max">/ 100</span><span id="delta-catch" class="signal-delta">—</span></div><div class="signal-copy">回檔承接／結構未破</div></div>
-        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span class="score-max">/ 100</span><span id="delta-watch" class="signal-delta">—</span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
-        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span class="score-max">/ 100</span><span id="delta-run" class="signal-delta">—</span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
+        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span class="score-max">/ 100</span><span id="delta-dance" class="signal-delta">—</span><span id="light-dance" class="signal-light" aria-label="蹦迪狀態燈號">🔴</span></div><div class="signal-copy">偏強／順勢進攻</div></div>
+        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span class="score-max">/ 100</span><span id="delta-catch" class="signal-delta">—</span><span id="light-catch" class="signal-light" aria-label="接妹狀態燈號">🔴</span></div><div class="signal-copy">回檔承接／結構未破</div></div>
+        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span class="score-max">/ 100</span><span id="delta-watch" class="signal-delta">—</span><span id="light-watch" class="signal-light" aria-label="觀察狀態燈號">🔴</span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
+        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span class="score-max">/ 100</span><span id="delta-run" class="signal-delta">—</span><span id="light-run" class="signal-light" aria-label="烙跑狀態燈號">🔴</span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
       </div>
       <div id="decisionReason" class="reason">正在等待可驗證的即時資料。</div>
       <div id="trendAlignment" class="trend-alignment">1Min ↔ 5Min：等待資料</div>
@@ -208,6 +209,7 @@
   let lastMarketAt = null;
   let lastModel = null;
   let previousScores = null;
+  let lastRenderedDeltas = null;
 
   function unwrapPayload(result) {
     let payload = result;
@@ -416,6 +418,15 @@
     };
   }
 
+  function stateLight(score, delta) {
+    if (!Number.isFinite(score)) return "🔴";
+    if (!Number.isFinite(delta)) return score >= 70 ? "🟢" : score >= 40 ? "🟡" : "🔴";
+    if (score >= 70 && delta <= -20) return "🟡";
+    if (score >= 70 || (score >= 60 && delta >= 10)) return "🟢";
+    if (score >= 40) return "🟡";
+    return "🔴";
+  }
+
   function fmt(value, digits = 2, suffix = "") {
     return Number.isFinite(value) ? value.toFixed(digits) + suffix : "—";
   }
@@ -434,6 +445,10 @@
     el.textContent = value > 0 ? "+" + value : String(value);
     if (value > 0) el.classList.add("positive");
     else if (value < 0) el.classList.add("negative");
+  }
+
+  function setLight(state, score, delta) {
+    setText("light-" + state, stateLight(score, delta));
   }
 
   function renderHealth(type, message) {
@@ -470,12 +485,17 @@
     setText("score-catch",decision.scores.catchScore);
     setText("score-watch",decision.scores.watchScore);
     setText("score-run",decision.scores.runScore);
-    if (deltas) {
-      setDelta("dance",deltas.dance);
-      setDelta("catch",deltas.catch);
-      setDelta("watch",deltas.watch);
-      setDelta("run",deltas.run);
+    const renderedDeltas = deltas ?? lastRenderedDeltas;
+    if (renderedDeltas) {
+      setDelta("dance",renderedDeltas.dance);
+      setDelta("catch",renderedDeltas.catch);
+      setDelta("watch",renderedDeltas.watch);
+      setDelta("run",renderedDeltas.run);
     }
+    setLight("dance",decision.scores.danceScore,renderedDeltas?.dance ?? null);
+    setLight("catch",decision.scores.catchScore,renderedDeltas?.catch ?? null);
+    setLight("watch",decision.scores.watchScore,renderedDeltas?.watch ?? null);
+    setLight("run",decision.scores.runScore,renderedDeltas?.run ?? null);
     setText("decisionReason",decision.reason);
     setText("trendAlignment","1Min ↔ 5Min："+(model.alignment==="bullish"?"同向偏多":model.alignment==="bearish"?"同向偏空":"不一致／中性"));
 
@@ -520,13 +540,14 @@
       const decision=decideState(model,healthy);
       if (!healthy) {
         lastModel=model;
-        renderMarketData(model,decision,false);
+        renderMarketData(model,decision,false,lastRenderedDeltas);
         renderHealth("stale","市場資料超過 3 分鐘");
         return;
       }
       const deltas=scoreDeltas(decision.scores);
       lastModel=model;
       renderMarketData(model,decision,true,deltas);
+      lastRenderedDeltas={ ...deltas };
       previousScores={ ...decision.scores };
       renderHealth("live","資料正常");
     } catch(error) {
@@ -534,7 +555,7 @@
       renderHealth("error",message);
       if (lastModel) {
         const decision=decideState(lastModel,false);
-        renderMarketData(lastModel,decision,false);
+        renderMarketData(lastModel,decision,false,lastRenderedDeltas);
       } else {
         setText("decisionReason","資料錯誤，且沒有可標示時間的有效資料。");
       }
