@@ -72,6 +72,29 @@
       margin-top: 5px;
     }
 
+
+    .decision-panel { margin-top:24px; padding:18px; background:#0d1015; border:1px solid #272b33; border-radius:16px; }
+    .decision-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .decision-title strong { font-size:16px; }
+    .decision-live { color:#38d996; font-size:12px; font-weight:700; }
+    .signals { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .signal { padding:13px; background:#191d24; border:1px solid transparent; border-radius:12px; color:#747d8c; opacity:.56; transition:.2s ease; }
+    .signal-name { font-size:17px; font-weight:800; }
+    .signal-copy { margin-top:4px; font-size:12px; line-height:1.45; }
+    .signal.active { color:#fff; opacity:1; transform:translateY(-1px); }
+    .signal[data-state="dance"].active { background:#123226; border-color:#38d996; box-shadow:0 0 22px rgba(56,217,150,.12); }
+    .signal[data-state="catch"].active { background:#132b38; border-color:#36bffa; box-shadow:0 0 22px rgba(54,191,250,.12); }
+    .signal[data-state="watch"].active { background:#342b14; border-color:#f4c84a; box-shadow:0 0 22px rgba(244,200,74,.12); }
+    .signal[data-state="run"].active { background:#39191e; border-color:#ff5d6c; box-shadow:0 0 22px rgba(255,93,108,.14); }
+    .decision-reason { margin-top:12px; color:#c6ccd6; font-size:13px; line-height:1.6; }
+    .indicator-row { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+    .indicator-chip { padding:5px 8px; background:#191d24; border-radius:999px; color:#9ba4b2; font-size:11px; }
+    @media (max-width:520px) {
+      body { padding:14px; }
+      .card { margin:18px auto; padding:18px; }
+      .signals { grid-template-columns:1fr; }
+    }
+
     #status {
       margin-top: 20px;
       color: #8b93a1;
@@ -111,6 +134,19 @@
         <div id="volume" class="metric-value">—</div>
       </div>
     </div>
+
+
+    <section class="decision-panel" aria-live="polite">
+      <div class="decision-title"><strong>即時交易判斷</strong><span class="decision-live">● LIVE · 5秒更新</span></div>
+      <div class="signals">
+        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-copy">量價轉強，順勢區</div></div>
+        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-copy">回到支撐，短線止跌</div></div>
+        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-copy">訊號不足，先不追</div></div>
+        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-copy">跌破支撐，動能轉弱</div></div>
+      </div>
+      <div id="decisionReason" class="decision-reason">正在等待足夠的即時市場資料…</div>
+      <div id="indicatorRow" class="indicator-row"></div>
+    </section>
 
     <div id="status">Waiting for market data...</div>
   </div>
@@ -185,6 +221,8 @@
     return {
       price,
       marketTime,
+      latest1Min,
+      latest5Min,
       dailyBar,
       prevDailyBar,
       feed: payload.feed ?? "iex",
@@ -207,6 +245,88 @@
     } else {
       el.textContent = String(number);
     }
+  }
+
+
+  function finiteNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function formatSigned(value, digits = 2) {
+    if (!Number.isFinite(value)) return "—";
+    return (value >= 0 ? "+" : "") + value.toFixed(digits) + "%";
+  }
+
+  function calculateDecision(data) {
+    const price = finiteNumber(data.price);
+    const previousClose = finiteNumber(data.prevDailyBar?.c);
+    const low = finiteNumber(data.dailyBar?.l);
+    const high = finiteNumber(data.dailyBar?.h);
+    const vwap = finiteNumber(data.dailyBar?.vw);
+    const oneMinClose = finiteNumber(data.latest1Min?.c);
+    const oneMinVolume = finiteNumber(data.latest1Min?.v);
+    const fiveMinOpen = finiteNumber(data.latest5Min?.o);
+    const fiveMinVolume = finiteNumber(data.latest5Min?.v);
+
+    const changePct = price != null && previousClose
+      ? ((price - previousClose) / previousClose) * 100 : null;
+    const vwapDistancePct = price != null && vwap
+      ? ((price - vwap) / vwap) * 100 : null;
+    const momentumPct = oneMinClose != null && fiveMinOpen
+      ? ((oneMinClose - fiveMinOpen) / fiveMinOpen) * 100 : null;
+    const rangePosition = price != null && low != null && high != null && high > low
+      ? ((price - low) / (high - low)) * 100 : null;
+    const volumeRatio = oneMinVolume != null && fiveMinVolume && fiveMinVolume > 0
+      ? oneMinVolume / (fiveMinVolume / 5) : null;
+
+    const enough = price != null && vwapDistancePct != null && rangePosition != null;
+    const breakdown = enough && (
+      (vwapDistancePct <= -0.35 && momentumPct != null && momentumPct <= -0.20) ||
+      (changePct != null && changePct <= -1.5 && rangePosition <= 35)
+    );
+    const breakout = enough && vwapDistancePct >= 0.20 && rangePosition >= 60 &&
+      changePct != null && changePct > 0 && (momentumPct == null || momentumPct >= 0.15);
+    const supportBounce = enough && Math.abs(vwapDistancePct) <= 0.35 &&
+      rangePosition >= 20 && rangePosition <= 65 &&
+      (momentumPct == null || momentumPct >= 0.05) &&
+      (changePct == null || changePct > -1.5);
+
+    let state = "watch";
+    let reason = enough
+      ? "訊號還沒有形成共振，先等價格、VWAP 與短線動能方向一致。"
+      : "目前資料不足，安全起見維持觀察，不產生進出場訊號。";
+
+    if (breakdown) {
+      state = "run";
+      reason = "價格弱於 VWAP，且短線動能或日內位置同步轉弱；優先控制風險。";
+    } else if (breakout) {
+      state = "dance";
+      reason = "價格站上 VWAP、位於日內強勢區，且短線動能向上；屬於順勢觀察區。";
+    } else if (supportBounce) {
+      state = "catch";
+      reason = "價格貼近 VWAP 支撐、未落入日內弱勢區，短線動能止跌回升。";
+    }
+
+    return { state, reason, changePct, vwapDistancePct, momentumPct, rangePosition, volumeRatio };
+  }
+
+  function renderDecision(data) {
+    const decision = calculateDecision(data);
+    document.querySelectorAll(".signal").forEach((element) => {
+      element.classList.toggle("active", element.dataset.state === decision.state);
+    });
+    document.getElementById("decisionReason").textContent = decision.reason;
+
+    const indicators = [
+      "VWAP差 " + formatSigned(decision.vwapDistancePct),
+      "當日漲跌 " + formatSigned(decision.changePct),
+      "5分動能 " + formatSigned(decision.momentumPct),
+      "日內位置 " + (Number.isFinite(decision.rangePosition) ? decision.rangePosition.toFixed(0) + "%" : "—"),
+      "1分量能 " + (Number.isFinite(decision.volumeRatio) ? decision.volumeRatio.toFixed(2) + "x" : "—"),
+    ];
+    document.getElementById("indicatorRow").innerHTML = indicators
+      .map((label) => '<span class="indicator-chip">' + label + "</span>").join("");
   }
 
   function renderMarketData(data) {
@@ -239,6 +359,7 @@
     setMetric("high", data.dailyBar?.h, { currency: true });
     setMetric("vwap", data.dailyBar?.vw, { currency: true });
     setMetric("volume", data.dailyBar?.v, { integer: true });
+    renderDecision(data);
 
     const parts = ["Alpaca IEX connected ✓"];
 
