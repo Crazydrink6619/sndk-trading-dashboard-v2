@@ -266,30 +266,40 @@
       avgLoss = (avgLoss * (period - 1) + Math.max(-change, 0)) / period;
     }
     if (avgLoss === 0) return avgGain === 0 ? 50 : 100;
-    const rs = avgGain / avgLoss;
-    return 100 - (100 / (1 + rs));
+    return 100 - 100 / (1 + avgGain / avgLoss);
   }
 
   function timeframeMetrics(bars, fallbackIndicators = null) {
     const closes = bars.map((bar) => finite(bar.c)).filter((value) => value != null);
+    const latest = bars.at(-1) ?? null;
+    const previous = bars.at(-2) ?? null;
+    const latestClose = finite(latest?.c);
+    const previousClose = finite(previous?.c);
     const ema9 = calculateEMA(closes, 9) ?? finite(fallbackIndicators?.ema9);
     const ema20 = calculateEMA(closes, 20) ?? finite(fallbackIndicators?.ema20);
     const rsi14 = calculateRSI(closes, 14) ?? finite(fallbackIndicators?.rsi14);
-    const latestClose = closes.at(-1) ?? null;
-    const previousClose = closes.length > 1 ? closes.at(-2) : null;
-    const momentumPct = latestClose != null && previousClose ? ((latestClose - previousClose) / previousClose) * 100 : null;
-    const trend = ema9 != null && ema20 != null ? (ema9 > ema20 ? "bullish" : ema9 < ema20 ? "bearish" : "neutral") : "neutral";
-    return { bars, closes, ema9, ema20, rsi14, latestClose, momentumPct, trend };
+    const momentumPct = latestClose != null && previousClose
+      ? ((latestClose - previousClose) / previousClose) * 100
+      : finite(fallbackIndicators?.momentumPct);
+    let trend = "neutral";
+    if (latestClose != null && ema9 != null && ema20 != null) {
+      if (latestClose > ema9 && ema9 > ema20) trend = "bullish";
+      else if (latestClose < ema9 && ema9 < ema20) trend = "bearish";
+    }
+    return { bars, latest, latestClose, ema9, ema20, rsi14, momentumPct, trend };
   }
 
   function normalizeMarketData(payload) {
-    const bars1Min = orderedBars(payload.timeframes?.["1Min"]?.bars ?? []);
-    const bars5Min = orderedBars(payload.timeframes?.["5Min"]?.bars ?? []);
-    const dailyBar = payload.dailyBar ?? null;
-    const prevDailyBar = payload.prevDailyBar ?? null;
-    const latestTrade = payload.latestTrade ?? null;
-    const latest1Min = bars1Min.at(-1) ?? payload.minuteBar ?? null;
-    const latest5Min = bars5Min.at(-1) ?? null;
+    const snapshot = payload.snapshot && typeof payload.snapshot === "object" ? payload.snapshot : payload;
+    const bars1Min = orderedBars(payload.timeframes?.["1Min"]?.bars);
+    const bars5Min = orderedBars(
+      payload.timeframes?.["5Min"]?.bars ?? (payload.timeframe === "5Min" ? payload.bars : null) ?? payload.bars
+    );
+    const latest1Min = payload.latest?.["1Min"] ?? bars1Min.at(-1) ?? null;
+    const latest5Min = payload.latest?.["5Min"] ?? bars5Min.at(-1) ?? null;
+    const latestTrade = snapshot.latestTrade ?? payload.latestTrade ?? null;
+    const dailyBar = snapshot.dailyBar ?? payload.dailyBar ?? null;
+    const prevDailyBar = snapshot.prevDailyBar ?? payload.prevDailyBar ?? null;
     const price = latestTrade?.p ?? latest1Min?.c ?? latest5Min?.c ?? dailyBar?.c ?? null;
     const marketTime = latestTrade?.t ?? latest1Min?.t ?? latest5Min?.t ?? dailyBar?.t ?? null;
     return {
