@@ -88,6 +88,10 @@
     .signal-delta { font-size:13px; font-weight:900; color:#9ba4b2; }
     .signal-delta.positive { color:#38d996; }
     .signal-delta.negative { color:#ff5d6c; }
+    .signal-timeframe { margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; color:#9ba4b2; font-size:12px; font-weight:800; }
+    .signal-timeframe span { white-space:nowrap; }
+    .signal-timeframe .positive { color:#38d996; }
+    .signal-timeframe .negative { color:#ff5d6c; }
     .signal-light { font-size:18px; line-height:1; filter:saturate(1.15); }
     .signal-copy { margin-top:6px; color:#9ba4b2; font-size:12px; line-height:1.45; }
     .signal.active { opacity:1; color:#fff; transform:translateY(-1px); }
@@ -165,10 +169,10 @@
         <span id="activeState">👀 觀察 ACTIVE</span>
       </div>
       <div class="signals">
-        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span class="score-max">/ 100</span><span id="delta-dance" class="signal-delta">—</span><span id="light-dance" class="signal-light" aria-label="蹦迪狀態燈號">🔴</span></div><div class="signal-copy">偏強／順勢進攻</div></div>
-        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span class="score-max">/ 100</span><span id="delta-catch" class="signal-delta">—</span><span id="light-catch" class="signal-light" aria-label="接妹狀態燈號">🔴</span></div><div class="signal-copy">回檔承接／結構未破</div></div>
-        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span class="score-max">/ 100</span><span id="delta-watch" class="signal-delta">—</span><span id="light-watch" class="signal-light" aria-label="觀察狀態燈號">🔴</span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
-        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span class="score-max">/ 100</span><span id="delta-run" class="signal-delta">—</span><span id="light-run" class="signal-light" aria-label="烙跑狀態燈號">🔴</span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
+        <div class="signal" data-state="dance"><div class="signal-name">🕺 蹦迪</div><div class="signal-score"><b id="score-dance">0</b> <span class="score-max">/ 100</span><span id="delta-dance" class="signal-delta">—</span><span id="light-dance" class="signal-light" aria-label="蹦迪狀態燈號">🔴</span></div><div class="signal-timeframe"><span>1m <b id="tf1-dance">—</b></span><span>5m <b id="tf5-dance">—</b></span></div><div class="signal-copy">偏強／順勢進攻</div></div>
+        <div class="signal" data-state="catch"><div class="signal-name">🤲 接妹</div><div class="signal-score"><b id="score-catch">0</b> <span class="score-max">/ 100</span><span id="delta-catch" class="signal-delta">—</span><span id="light-catch" class="signal-light" aria-label="接妹狀態燈號">🔴</span></div><div class="signal-timeframe"><span>1m <b id="tf1-catch">—</b></span><span>5m <b id="tf5-catch">—</b></span></div><div class="signal-copy">回檔承接／結構未破</div></div>
+        <div class="signal active" data-state="watch"><div class="signal-name">👀 觀察</div><div class="signal-score"><b id="score-watch">0</b> <span class="score-max">/ 100</span><span id="delta-watch" class="signal-delta">—</span><span id="light-watch" class="signal-light" aria-label="觀察狀態燈號">🔴</span></div><div class="signal-timeframe"><span>1m <b id="tf1-watch">—</b></span><span>5m <b id="tf5-watch">—</b></span></div><div class="signal-copy">矛盾／不足／資料異常</div></div>
+        <div class="signal" data-state="run"><div class="signal-name">🏃 烙跑</div><div class="signal-score"><b id="score-run">0</b> <span class="score-max">/ 100</span><span id="delta-run" class="signal-delta">—</span><span id="light-run" class="signal-light" aria-label="烙跑狀態燈號">🔴</span></div><div class="signal-timeframe"><span>1m <b id="tf1-run">—</b></span><span>5m <b id="tf5-run">—</b></span></div><div class="signal-copy">結構轉弱／風險升高</div></div>
       </div>
       <div id="decisionReason" class="reason">正在等待可驗證的即時資料。</div>
       <div id="trendAlignment" class="trend-alignment">1Min ↔ 5Min：等待資料</div>
@@ -210,6 +214,7 @@
   let lastModel = null;
   let previousScores = null;
   let lastRenderedDeltas = null;
+  let lastRenderedTimeframeDeltas = null;
 
   function unwrapPayload(result) {
     let payload = result;
@@ -418,6 +423,71 @@
     };
   }
 
+  function timeframeStateScore(metrics, bars) {
+    const latest = bars.at(-1) ?? null;
+    const priorBars = bars.slice(0, -1);
+    if (!latest || priorBars.length < 2) return null;
+    const close = finite(latest.c);
+    const open = finite(latest.o);
+    const volume = finite(latest.v);
+    const priorVolumes = priorBars.slice(-20).map((bar) => finite(bar.v)).filter((value) => value != null);
+    const averageVolume = priorVolumes.length ? priorVolumes.reduce((sum, value) => sum + value, 0) / priorVolumes.length : null;
+    const volumeRatio = volume != null && averageVolume ? volume / averageVolume : null;
+    const bullish = metrics.trend === "bullish" || (metrics.momentumPct != null && metrics.momentumPct >= 0.08);
+    const bearish = metrics.trend === "bearish" || (metrics.momentumPct != null && metrics.momentumPct <= -0.08);
+    const aboveEma20 = close != null && metrics.ema20 != null && close >= metrics.ema20;
+    const belowEma20 = close != null && metrics.ema20 != null && close < metrics.ema20;
+    const rsiStrong = metrics.rsi14 != null && metrics.rsi14 >= 52 && metrics.rsi14 <= 75;
+    const rsiWeak = metrics.rsi14 != null && metrics.rsi14 < 45;
+    const greenBar = close != null && open != null && close >= open;
+    const redBar = close != null && open != null && close < open;
+    const volumeStrong = volumeRatio != null && volumeRatio >= 1.15;
+    const nearNeutral = metrics.rsi14 != null && metrics.rsi14 >= 45 && metrics.rsi14 <= 55;
+
+    const dance = scorePercent([bullish,aboveEma20,rsiStrong,greenBar,volumeStrong].filter(Boolean).length, 5);
+    const catchScore = scorePercent([aboveEma20,!bearish,nearNeutral || greenBar,metrics.momentumPct != null && metrics.momentumPct >= -0.12,volumeRatio == null || volumeRatio >= 0.8].filter(Boolean).length, 5);
+    const run = scorePercent([bearish,belowEma20,rsiWeak,redBar,volumeStrong].filter(Boolean).length, 5);
+    const directionalConfidence = Math.max(dance, catchScore, run);
+    const watch = scorePercent([directionalConfidence < 60,metrics.trend === "neutral",nearNeutral,!volumeStrong,!bullish && !bearish].filter(Boolean).length, 5);
+    return { dance, catch: catchScore, watch, run };
+  }
+
+  function timeframeScoreForBars(bars) {
+    if (!Array.isArray(bars) || bars.length < 3) return null;
+    const metrics = timeframeMetrics(bars);
+    return timeframeStateScore(metrics, bars);
+  }
+
+  function completedTimeframeBars(bars, timeframeMinutes, nowMs = Date.now()) {
+    if (!Array.isArray(bars) || !Number.isFinite(timeframeMinutes) || timeframeMinutes <= 0) return [];
+    const durationMs = timeframeMinutes * 60 * 1000;
+    return bars.filter((bar) => {
+      const startMs = new Date(bar?.t).getTime();
+      return Number.isFinite(startMs) && startMs + durationMs <= nowMs;
+    });
+  }
+
+  function calculateTimeframeDeltaForBars(bars, timeframeMinutes) {
+    const completedBars = completedTimeframeBars(bars, timeframeMinutes);
+    if (completedBars.length < 4) return { dance:null, catch:null, watch:null, run:null };
+    const currentScores = timeframeScoreForBars(completedBars);
+    const previousScoresForBar = timeframeScoreForBars(completedBars.slice(0, -1));
+    if (!currentScores || !previousScoresForBar) return { dance:null, catch:null, watch:null, run:null };
+    return {
+      dance: currentScores.dance - previousScoresForBar.dance,
+      catch: currentScores.catch - previousScoresForBar.catch,
+      watch: currentScores.watch - previousScoresForBar.watch,
+      run: currentScores.run - previousScoresForBar.run,
+    };
+  }
+
+  function calculateTimeframeStateScores(model) {
+    return {
+      one: calculateTimeframeDeltaForBars(model.bars1Min, 1),
+      five: calculateTimeframeDeltaForBars(model.bars5Min, 5),
+    };
+  }
+
   function stateLight(score, delta) {
     if (!Number.isFinite(score)) return "🔴";
     if (!Number.isFinite(delta)) return score >= 70 ? "🟢" : score >= 40 ? "🟡" : "🔴";
@@ -447,6 +517,18 @@
     else if (value < 0) el.classList.add("negative");
   }
 
+  function setTimeframeDelta(timeframe, state, value) {
+    const el = document.getElementById("tf" + timeframe + "-" + state);
+    el.classList.remove("positive", "negative");
+    if (!Number.isFinite(value)) {
+      el.textContent = "—";
+      return;
+    }
+    el.textContent = value > 0 ? "+" + value : String(value);
+    if (value > 0) el.classList.add("positive");
+    else if (value < 0) el.classList.add("negative");
+  }
+
   function setLight(state, score, delta) {
     setText("light-" + state, stateLight(score, delta));
   }
@@ -460,7 +542,7 @@
     setText("healthTime", "接收 " + success + " · 市場資料 " + market);
   }
 
-  function renderMarketData(model, decision, healthy, deltas = null) {
+  function renderMarketData(model, decision, healthy, deltas = null, timeframeDeltas = null) {
     const price = model.price;
     if (!Number.isFinite(price)) throw new Error("No SNDK price returned");
     setText("price", "$" + price.toFixed(2));
@@ -491,6 +573,13 @@
       setDelta("catch",renderedDeltas.catch);
       setDelta("watch",renderedDeltas.watch);
       setDelta("run",renderedDeltas.run);
+    }
+    const renderedTimeframeDeltas = timeframeDeltas ?? lastRenderedTimeframeDeltas;
+    if (renderedTimeframeDeltas) {
+      ["dance","catch","watch","run"].forEach((state)=>{
+        setTimeframeDelta("1",state,renderedTimeframeDeltas.one?.[state] ?? null);
+        setTimeframeDelta("5",state,renderedTimeframeDeltas.five?.[state] ?? null);
+      });
     }
     setLight("dance",decision.scores.danceScore,renderedDeltas?.dance ?? null);
     setLight("catch",decision.scores.catchScore,renderedDeltas?.catch ?? null);
@@ -540,14 +629,16 @@
       const decision=decideState(model,healthy);
       if (!healthy) {
         lastModel=model;
-        renderMarketData(model,decision,false,lastRenderedDeltas);
+        renderMarketData(model,decision,false,lastRenderedDeltas,lastRenderedTimeframeDeltas);
         renderHealth("stale","市場資料超過 3 分鐘");
         return;
       }
       const deltas=scoreDeltas(decision.scores);
+      const timeframeDeltas=calculateTimeframeStateScores(model);
       lastModel=model;
-      renderMarketData(model,decision,true,deltas);
+      renderMarketData(model,decision,true,deltas,timeframeDeltas);
       lastRenderedDeltas={ ...deltas };
+      lastRenderedTimeframeDeltas={ one:{...timeframeDeltas.one}, five:{...timeframeDeltas.five} };
       previousScores={ ...decision.scores };
       renderHealth("live","資料正常");
     } catch(error) {
@@ -555,7 +646,7 @@
       renderHealth("error",message);
       if (lastModel) {
         const decision=decideState(lastModel,false);
-        renderMarketData(lastModel,decision,false,lastRenderedDeltas);
+        renderMarketData(lastModel,decision,false,lastRenderedDeltas,lastRenderedTimeframeDeltas);
       } else {
         setText("decisionReason","資料錯誤，且沒有可標示時間的有效資料。");
       }
