@@ -23,60 +23,19 @@
       border-radius: 20px;
     }
 
-    .label {
-      color: #8b93a1;
-      font-size: 14px;
-    }
-
-    .symbol {
-      font-size: 26px;
-      font-weight: 800;
-      margin-top: 6px;
-    }
-
-    .price {
-      font-size: 48px;
-      font-weight: 800;
-      margin: 18px 0 4px;
-    }
-
-    .change {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .positive {
-      color: #38d996;
-    }
-
-    .negative {
-      color: #ff5d6c;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .metric {
-      background: #191d24;
-      padding: 14px;
-      border-radius: 12px;
-    }
-
-    .metric-value {
-      font-size: 18px;
-      font-weight: 700;
-      margin-top: 5px;
-    }
-
+    .label { color:#8b93a1; font-size:14px; }
+    .symbol { font-size:26px; font-weight:800; margin-top:6px; }
+    .price { font-size:48px; font-weight:800; margin:18px 0 4px; }
+    .change { font-size:20px; font-weight:700; }
+    .positive { color:#38d996; }
+    .negative { color:#ff5d6c; }
+    .neutral { color:#aab2bf; }
 
     .health { margin-top:16px; padding:12px 14px; border-radius:12px; background:#191d24; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:13px; }
     .health[data-health="live"] { border:1px solid #2d8f69; color:#67e8b3; }
     .health[data-health="stale"] { border:1px solid #a97c22; color:#ffd166; }
     .health[data-health="error"] { border:1px solid #a83b49; color:#ff8792; }
+
     .decision-panel { margin-top:24px; padding:18px; background:#0d1015; border:1px solid #272b33; border-radius:16px; }
     .decision-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
     .decision-head strong { font-size:18px; }
@@ -101,62 +60,65 @@
     .signal[data-state="run"].active { background:#39191e; border-color:#ff5d6c; }
     .reason { margin-top:14px; font-size:14px; line-height:1.65; color:#d7dce5; }
     .trend-alignment { margin-top:12px; padding:10px 12px; background:#191d24; border-radius:10px; font-size:13px; font-weight:700; }
-    .tech-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:14px; }
-    .tech-card { padding:14px; background:#191d24; border-radius:12px; }
-    .tech-card h3 { margin:0 0 10px; font-size:15px; }
-    .tech-values { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; font-size:12px; color:#aab2bf; }
-    .tech-values b { display:block; margin-top:2px; color:#fff; font-size:14px; }
+
+    .technical-data { margin-top:16px; display:grid; gap:10px; }
+    .technical-card { background:#151920; border:1px solid #272b33; border-radius:12px; padding:13px; }
+    .technical-card h3 { margin:0 0 10px; font-size:14px; letter-spacing:.2px; }
+    .technical-card .subtle { color:#8b93a1; font-size:11px; font-weight:600; }
+    .price-position-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+    .data-cell { min-width:0; padding:9px 10px; background:#191d24; border-radius:9px; }
+    .data-cell .data-label { display:block; color:#8f98a6; font-size:11px; line-height:1.3; }
+    .data-cell b { display:block; margin-top:4px; color:#fff; font-size:14px; line-height:1.25; overflow-wrap:anywhere; }
+
+    .compare-table { display:grid; grid-template-columns:minmax(92px,1.1fr) minmax(0,1fr) minmax(0,1fr); gap:1px; background:#2a2f38; border-radius:10px; overflow:hidden; }
+    .compare-cell { background:#191d24; padding:9px 10px; min-width:0; font-size:13px; }
+    .compare-head { color:#9ba4b2; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
+    .compare-label { color:#aab2bf; font-size:12px; font-weight:700; }
+    .compare-value { color:#fff; font-weight:800; overflow-wrap:anywhere; }
+    .compare-value.positive { color:#38d996; }
+    .compare-value.negative { color:#ff5d6c; }
+    .compare-value.neutral { color:#c6ccd6; }
+
+    .market-data-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .latency-strip { margin-top:9px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .latency-strip .data-cell { background:#12161c; }
+
     .conditions { margin-top:14px; display:grid; grid-template-columns:repeat(2,1fr); gap:7px 12px; }
     .condition { padding:8px 10px; border-radius:9px; background:#191d24; color:#aab2bf; font-size:12px; }
     .condition.pass { color:#67e8b3; }
     .condition.fail { color:#ff8792; }
+
+    #status { margin-top:14px; color:#7f8793; font-size:12px; line-height:1.5; }
+
     @media (max-width:720px) {
       body { padding:12px; }
       .card { margin:12px auto; padding:17px; }
       .signals { grid-template-columns:repeat(2,1fr); }
-      .tech-grid,.conditions { grid-template-columns:1fr; }
+      .price-position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .price-position-grid .data-cell:first-child { grid-column:1 / -1; }
+      .market-data-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .conditions { grid-template-columns:1fr; }
+      .compare-table { grid-template-columns:minmax(82px,1fr) minmax(0,1fr) minmax(0,1fr); }
+      .compare-cell { padding:8px; font-size:12px; }
     }
 
-    #status {
-      margin-top: 20px;
-      color: #8b93a1;
-      font-size: 13px;
-      line-height: 1.5;
+    @media (max-width:420px) {
+      .card { padding:14px; }
+      .price { font-size:42px; }
+      .signal { padding:11px; }
+      .technical-card { padding:11px; }
+      .price-position-grid,.market-data-grid,.latency-strip { gap:6px; }
+      .data-cell { padding:8px; }
     }
   </style>
 </head>
 
 <body>
-
   <div class="card">
     <div class="label">LIVE MARKET DATA · ALPACA IEX</div>
     <div class="symbol">SNDK · SanDisk</div>
-
     <div id="price" class="price">Loading...</div>
     <div id="change" class="change">Connecting to Alpaca...</div>
-
-    <div class="grid">
-      <div class="metric">
-        <div class="label">DAY LOW</div>
-        <div id="low" class="metric-value">—</div>
-      </div>
-
-      <div class="metric">
-        <div class="label">DAY HIGH</div>
-        <div id="high" class="metric-value">—</div>
-      </div>
-
-      <div class="metric">
-        <div class="label">VWAP</div>
-        <div id="vwap" class="metric-value">—</div>
-      </div>
-
-      <div class="metric">
-        <div class="label">VOLUME · IEX</div>
-        <div id="volume" class="metric-value">—</div>
-      </div>
-    </div>
-
 
     <div id="dataHealth" class="health" data-health="stale">
       <strong id="healthLabel">WAITING · 等待資料</strong>
@@ -177,24 +139,47 @@
       <div id="decisionReason" class="reason">正在等待可驗證的即時資料。</div>
       <div id="trendAlignment" class="trend-alignment">1Min ↔ 5Min：等待資料</div>
 
-      <div class="tech-grid">
-        <div class="tech-card">
-          <h3>1Min 技術資料</h3>
-          <div class="tech-values">
-            <span>EMA9<b id="ema9-1m">—</b></span><span>EMA20<b id="ema20-1m">—</b></span>
-            <span>RSI14<b id="rsi14-1m">—</b></span><span>動能<b id="momentum-1m">—</b></span>
-            <span>量能比<b id="volume-ratio">—</b></span><span>趨勢<b id="trend-1m">—</b></span>
+      <div class="technical-data" aria-label="Technical Data">
+        <div class="technical-card">
+          <h3>Price / Position</h3>
+          <div class="price-position-grid">
+            <div class="data-cell"><span class="data-label">Current</span><b id="tech-current">—</b></div>
+            <div class="data-cell"><span class="data-label">VWAP</span><b id="vwap">—</b></div>
+            <div class="data-cell"><span class="data-label">Day High</span><b id="high">—</b></div>
+            <div class="data-cell"><span class="data-label">Day Low</span><b id="low">—</b></div>
+            <div class="data-cell"><span class="data-label">Intraday Position</span><b id="range-position">—</b></div>
           </div>
         </div>
-        <div class="tech-card">
-          <h3>5Min 技術資料</h3>
-          <div class="tech-values">
-            <span>EMA9<b id="ema9-5m">—</b></span><span>EMA20<b id="ema20-5m">—</b></span>
-            <span>RSI14<b id="rsi14-5m">—</b></span><span>動能<b id="momentum-5m">—</b></span>
-            <span>日內位置<b id="range-position">—</b></span><span>距 VWAP<b id="vwap-distance">—</b></span>
+
+        <div class="technical-card">
+          <h3>1Min vs 5Min <span class="subtle">同列比較</span></h3>
+          <div class="compare-table" role="table" aria-label="1 minute and 5 minute technical comparison">
+            <div class="compare-cell compare-head">Metric</div><div class="compare-cell compare-head">1Min</div><div class="compare-cell compare-head">5Min</div>
+            <div class="compare-cell compare-label">Trend</div><div id="trend-1m" class="compare-cell compare-value">—</div><div id="trend-5m" class="compare-cell compare-value">—</div>
+            <div class="compare-cell compare-label">Momentum</div><div id="momentum-1m" class="compare-cell compare-value">—</div><div id="momentum-5m" class="compare-cell compare-value">—</div>
+            <div class="compare-cell compare-label">RSI14</div><div id="rsi14-1m" class="compare-cell compare-value">—</div><div id="rsi14-5m" class="compare-cell compare-value">—</div>
+            <div class="compare-cell compare-label">EMA20</div><div id="ema20-1m" class="compare-cell compare-value">—</div><div id="ema20-5m" class="compare-cell compare-value">—</div>
+            <div class="compare-cell compare-label">EMA9</div><div id="ema9-1m" class="compare-cell compare-value">—</div><div id="ema9-5m" class="compare-cell compare-value">—</div>
+            <div class="compare-cell compare-label">Volume Ratio</div><div id="volume-ratio" class="compare-cell compare-value">—</div><div class="compare-cell compare-value neutral">—</div>
+          </div>
+        </div>
+
+        <div class="technical-card">
+          <h3>Market / Data</h3>
+          <div class="market-data-grid">
+            <div class="data-cell"><span class="data-label">Market timestamp</span><b id="market-timestamp">—</b></div>
+            <div class="data-cell"><span class="data-label">Data age</span><b id="data-age">—</b></div>
+            <div class="data-cell"><span class="data-label">Status</span><b id="market-status">—</b></div>
+            <div class="data-cell"><span class="data-label">Daily Volume · IEX</span><b id="volume">—</b></div>
+          </div>
+          <div class="latency-strip" aria-label="Latency telemetry">
+            <div class="data-cell"><span class="data-label">Fetch</span><b id="latency-fetch">—</b></div>
+            <div class="data-cell"><span class="data-label">Render</span><b id="latency-render">—</b></div>
+            <div class="data-cell"><span class="data-label">Total</span><b id="latency-total">—</b></div>
           </div>
         </div>
       </div>
+
       <div id="conditions" class="conditions"></div>
     </section>
 
@@ -221,476 +206,268 @@
 
   function unwrapPayload(result) {
     let payload = result;
-    if (payload && payload.body != null) {
-      payload = typeof payload.body === "string" ? JSON.parse(payload.body) : payload.body;
-    }
+    if (payload && payload.body != null) payload = typeof payload.body === "string" ? JSON.parse(payload.body) : payload.body;
     if (!payload || typeof payload !== "object") throw new Error("Invalid market-data response");
     return payload;
   }
 
-  function finite(value) {
-    const number = Number(value);
-    return Number.isFinite(number) ? number : null;
-  }
-
+  function finite(value) { const number = Number(value); return Number.isFinite(number) ? number : null; }
   function orderedBars(value) {
     if (!Array.isArray(value)) return [];
-    return value
-      .filter((bar) => bar && finite(bar.c) != null)
-      .slice()
-      .sort((a, b) => new Date(a.t).getTime() - new Date(b.t).getTime());
+    return value.filter((bar)=>bar && finite(bar.c)!=null).slice().sort((a,b)=>new Date(a.t).getTime()-new Date(b.t).getTime());
   }
-
   function calculateEMA(values, period) {
     if (values.length < period) return null;
     const multiplier = 2 / (period + 1);
-    let ema = values.slice(0, period).reduce((sum, value) => sum + value, 0) / period;
-    for (let i = period; i < values.length; i++) ema = (values[i] - ema) * multiplier + ema;
+    let ema = values.slice(0, period).reduce((sum,value)=>sum+value,0) / period;
+    for (let i=period;i<values.length;i++) ema=(values[i]-ema)*multiplier+ema;
     return ema;
   }
-
-  function calculateRSI(values, period = 14) {
+  function calculateRSI(values, period=14) {
     if (values.length <= period) return null;
-    let gains = 0;
-    let losses = 0;
-    for (let i = 1; i <= period; i++) {
-      const change = values[i] - values[i - 1];
-      gains += Math.max(change, 0);
-      losses += Math.max(-change, 0);
-    }
-    let avgGain = gains / period;
-    let avgLoss = losses / period;
-    for (let i = period + 1; i < values.length; i++) {
-      const change = values[i] - values[i - 1];
-      avgGain = (avgGain * (period - 1) + Math.max(change, 0)) / period;
-      avgLoss = (avgLoss * (period - 1) + Math.max(-change, 0)) / period;
-    }
-    if (avgLoss === 0) return avgGain === 0 ? 50 : 100;
-    return 100 - 100 / (1 + avgGain / avgLoss);
+    let gains=0, losses=0;
+    for (let i=1;i<=period;i++) { const change=values[i]-values[i-1]; gains+=Math.max(change,0); losses+=Math.max(-change,0); }
+    let avgGain=gains/period, avgLoss=losses/period;
+    for (let i=period+1;i<values.length;i++) { const change=values[i]-values[i-1]; avgGain=(avgGain*(period-1)+Math.max(change,0))/period; avgLoss=(avgLoss*(period-1)+Math.max(-change,0))/period; }
+    if (avgLoss===0) return avgGain===0 ? 50 : 100;
+    return 100 - 100/(1+avgGain/avgLoss);
   }
-
-  function timeframeMetrics(bars, fallbackIndicators = null) {
-    const closes = bars.map((bar) => finite(bar.c)).filter((value) => value != null);
-    const latest = bars.at(-1) ?? null;
-    const previous = bars.at(-2) ?? null;
-    const latestClose = finite(latest?.c);
-    const previousClose = finite(previous?.c);
-    const ema9 = calculateEMA(closes, 9) ?? finite(fallbackIndicators?.ema9);
-    const ema20 = calculateEMA(closes, 20) ?? finite(fallbackIndicators?.ema20);
-    const rsi14 = calculateRSI(closes, 14) ?? finite(fallbackIndicators?.rsi14);
-    const momentumPct = latestClose != null && previousClose
-      ? ((latestClose - previousClose) / previousClose) * 100
-      : finite(fallbackIndicators?.momentumPct);
-    let trend = "neutral";
-    if (latestClose != null && ema9 != null && ema20 != null) {
-      if (latestClose > ema9 && ema9 > ema20) trend = "bullish";
-      else if (latestClose < ema9 && ema9 < ema20) trend = "bearish";
-    }
+  function timeframeMetrics(bars, fallbackIndicators=null) {
+    const closes=bars.map((bar)=>finite(bar.c)).filter((value)=>value!=null);
+    const latest=bars.at(-1)??null, previous=bars.at(-2)??null;
+    const latestClose=finite(latest?.c), previousClose=finite(previous?.c);
+    const ema9=calculateEMA(closes,9)??finite(fallbackIndicators?.ema9);
+    const ema20=calculateEMA(closes,20)??finite(fallbackIndicators?.ema20);
+    const rsi14=calculateRSI(closes,14)??finite(fallbackIndicators?.rsi14);
+    const momentumPct=latestClose!=null && previousClose ? ((latestClose-previousClose)/previousClose)*100 : finite(fallbackIndicators?.momentumPct);
+    let trend="neutral";
+    if (latestClose!=null && ema9!=null && ema20!=null) { if (latestClose>ema9 && ema9>ema20) trend="bullish"; else if (latestClose<ema9 && ema9<ema20) trend="bearish"; }
     return { bars, latest, latestClose, ema9, ema20, rsi14, momentumPct, trend };
   }
-
   function normalizeMarketData(payload) {
-    const snapshot = payload.snapshot && typeof payload.snapshot === "object" ? payload.snapshot : payload;
-    const bars1Min = orderedBars(payload.timeframes?.["1Min"]?.bars);
-    const bars5Min = orderedBars(
-      payload.timeframes?.["5Min"]?.bars ?? (payload.timeframe === "5Min" ? payload.bars : null) ?? payload.bars
-    );
-    const latest1Min = payload.latest?.["1Min"] ?? bars1Min.at(-1) ?? null;
-    const latest5Min = payload.latest?.["5Min"] ?? bars5Min.at(-1) ?? null;
-    const latestTrade = snapshot.latestTrade ?? payload.latestTrade ?? null;
-    const dailyBar = snapshot.dailyBar ?? payload.dailyBar ?? null;
-    const prevDailyBar = snapshot.prevDailyBar ?? payload.prevDailyBar ?? null;
-    const price = latestTrade?.p ?? latest1Min?.c ?? latest5Min?.c ?? dailyBar?.c ?? null;
-    const marketTime = latestTrade?.t ?? latest1Min?.t ?? latest5Min?.t ?? dailyBar?.t ?? null;
-    return {
-      price, marketTime, dailyBar, prevDailyBar, bars1Min, bars5Min,
-      fallback1MinIndicators: payload.timeframes?.["1Min"]?.indicators ?? null,
-      fallback5MinIndicators:
-        payload.timeframes?.["5Min"]?.indicators ?? payload.indicators ?? null,
-      feed: payload.feed ?? "iex", version: payload.version ?? (payload.indicators ? "0.3" : null),
-    };
+    const snapshot=payload.snapshot && typeof payload.snapshot==="object" ? payload.snapshot : payload;
+    const bars1Min=orderedBars(payload.timeframes?.["1Min"]?.bars);
+    const bars5Min=orderedBars(payload.timeframes?.["5Min"]?.bars ?? (payload.timeframe==="5Min"?payload.bars:null) ?? payload.bars);
+    const latest1Min=payload.latest?.["1Min"]??bars1Min.at(-1)??null;
+    const latest5Min=payload.latest?.["5Min"]??bars5Min.at(-1)??null;
+    const latestTrade=snapshot.latestTrade??payload.latestTrade??null;
+    const dailyBar=snapshot.dailyBar??payload.dailyBar??null;
+    const prevDailyBar=snapshot.prevDailyBar??payload.prevDailyBar??null;
+    const price=latestTrade?.p??latest1Min?.c??latest5Min?.c??dailyBar?.c??null;
+    const marketTime=latestTrade?.t??latest1Min?.t??latest5Min?.t??dailyBar?.t??null;
+    return { price, marketTime, dailyBar, prevDailyBar, bars1Min, bars5Min, fallback1MinIndicators:payload.timeframes?.["1Min"]?.indicators??null, fallback5MinIndicators:payload.timeframes?.["5Min"]?.indicators??payload.indicators??null, feed:payload.feed??"iex", version:payload.version??(payload.indicators?"0.3":null) };
   }
-
   function buildTechnicalModel(data) {
-    const one = timeframeMetrics(data.bars1Min, data.fallback1MinIndicators);
-    const five = timeframeMetrics(data.bars5Min, data.fallback5MinIndicators);
-    const price = finite(data.price);
-    const previousClose = finite(data.prevDailyBar?.c);
-    const low = finite(data.dailyBar?.l);
-    const high = finite(data.dailyBar?.h);
-    const vwap = finite(data.dailyBar?.vw);
-    const changePct = price != null && previousClose ? ((price - previousClose) / previousClose) * 100 : null;
-    const vwapDistancePct = price != null && vwap ? ((price - vwap) / vwap) * 100 : null;
-    const rangePosition = price != null && low != null && high != null && high > low
-      ? ((price - low) / (high - low)) * 100 : null;
-    const volumes = one.bars.slice(-21).map((bar) => finite(bar.v)).filter((value) => value != null);
-    const latestVolume = volumes.at(-1) ?? null;
-    const baseVolumes = volumes.slice(0, -1);
-    const averageVolume = baseVolumes.length
-      ? baseVolumes.reduce((sum, value) => sum + value, 0) / baseVolumes.length : null;
-    const volumeRatio = latestVolume != null && averageVolume ? latestVolume / averageVolume : null;
-    const alignment = one.trend === five.trend && one.trend !== "neutral"
-      ? (one.trend === "bullish" ? "bullish" : "bearish") : "mixed";
+    const one=timeframeMetrics(data.bars1Min,data.fallback1MinIndicators), five=timeframeMetrics(data.bars5Min,data.fallback5MinIndicators);
+    const price=finite(data.price), previousClose=finite(data.prevDailyBar?.c), low=finite(data.dailyBar?.l), high=finite(data.dailyBar?.h), vwap=finite(data.dailyBar?.vw);
+    const changePct=price!=null && previousClose ? ((price-previousClose)/previousClose)*100 : null;
+    const vwapDistancePct=price!=null && vwap ? ((price-vwap)/vwap)*100 : null;
+    const rangePosition=price!=null && low!=null && high!=null && high>low ? ((price-low)/(high-low))*100 : null;
+    const volumes=one.bars.slice(-21).map((bar)=>finite(bar.v)).filter((value)=>value!=null);
+    const latestVolume=volumes.at(-1)??null, baseVolumes=volumes.slice(0,-1);
+    const averageVolume=baseVolumes.length ? baseVolumes.reduce((sum,value)=>sum+value,0)/baseVolumes.length : null;
+    const volumeRatio=latestVolume!=null && averageVolume ? latestVolume/averageVolume : null;
+    const alignment=one.trend===five.trend && one.trend!=="neutral" ? (one.trend==="bullish"?"bullish":"bearish") : "mixed";
     return { ...data, price, changePct, vwapDistancePct, rangePosition, volumeRatio, one, five, alignment };
   }
 
-  function condition(label, passed, available = true) {
-    return { label, passed: available ? passed : null };
-  }
-
-  function scorePercent(matches, total) {
-    return Math.round((matches / total) * 100);
-  }
-
+  function condition(label, passed, available=true) { return { label, passed:available?passed:null }; }
+  function scorePercent(matches,total) { return Math.round((matches/total)*100); }
   function decideState(model, healthy) {
-    const c = {
-      aboveVwap: model.vwapDistancePct != null && model.vwapDistancePct >= 0.15,
-      belowVwap: model.vwapDistancePct != null && model.vwapDistancePct <= -0.35,
-      nearVwap: model.vwapDistancePct != null && Math.abs(model.vwapDistancePct) <= 0.35,
-      strongZone: model.rangePosition != null && model.rangePosition >= 60,
-      weakZone: model.rangePosition != null && model.rangePosition <= 35,
-      oneBull: model.one.trend === "bullish" || (model.one.momentumPct != null && model.one.momentumPct >= 0.08),
-      fiveBull: model.five.trend === "bullish" || (model.five.momentumPct != null && model.five.momentumPct >= 0.12),
-      oneBear: model.one.trend === "bearish" || (model.one.momentumPct != null && model.one.momentumPct <= -0.08),
-      fiveBear: model.five.trend === "bearish" || (model.five.momentumPct != null && model.five.momentumPct <= -0.12),
-      rsiStrong: model.five.rsi14 != null && model.five.rsi14 >= 52 && model.five.rsi14 <= 75,
-      rsiWeak: model.five.rsi14 != null && model.five.rsi14 < 45,
-      volumeStrong: model.volumeRatio != null && model.volumeRatio >= 1.15,
-      fiveStructureHeld: model.five.latestClose != null && model.five.ema20 != null &&
-        model.five.latestClose >= model.five.ema20 && (model.five.ema9 == null || model.five.ema9 >= model.five.ema20),
+    const c={
+      aboveVwap:model.vwapDistancePct!=null && model.vwapDistancePct>=0.15,
+      belowVwap:model.vwapDistancePct!=null && model.vwapDistancePct<=-0.35,
+      nearVwap:model.vwapDistancePct!=null && Math.abs(model.vwapDistancePct)<=0.35,
+      strongZone:model.rangePosition!=null && model.rangePosition>=60,
+      weakZone:model.rangePosition!=null && model.rangePosition<=35,
+      oneBull:model.one.trend==="bullish" || (model.one.momentumPct!=null && model.one.momentumPct>=0.08),
+      fiveBull:model.five.trend==="bullish" || (model.five.momentumPct!=null && model.five.momentumPct>=0.12),
+      oneBear:model.one.trend==="bearish" || (model.one.momentumPct!=null && model.one.momentumPct<=-0.08),
+      fiveBear:model.five.trend==="bearish" || (model.five.momentumPct!=null && model.five.momentumPct<=-0.12),
+      rsiStrong:model.five.rsi14!=null && model.five.rsi14>=52 && model.five.rsi14<=75,
+      rsiWeak:model.five.rsi14!=null && model.five.rsi14<45,
+      volumeStrong:model.volumeRatio!=null && model.volumeRatio>=1.15,
+      fiveStructureHeld:model.five.latestClose!=null && model.five.ema20!=null && model.five.latestClose>=model.five.ema20 && (model.five.ema9==null || model.five.ema9>=model.five.ema20),
     };
-
-    const danceMatches = [c.aboveVwap,c.strongZone,c.oneBull,c.fiveBull,c.rsiStrong,c.volumeStrong,model.alignment==="bullish"].filter(Boolean).length;
-    const runMatches = [c.belowVwap,c.weakZone,c.oneBear,c.fiveBear,c.rsiWeak,model.alignment==="bearish"].filter(Boolean).length;
-    const catchMatches = [c.nearVwap,c.fiveStructureHeld,c.oneBull,
-      model.rangePosition != null && model.rangePosition >= 25 && model.rangePosition <= 65,
-      model.one.rsi14 != null && model.one.rsi14 >= 45].filter(Boolean).length;
-
-    const danceScore = scorePercent(danceMatches, 7);
-    const catchScore = scorePercent(catchMatches, 5);
-    const runScore = scorePercent(runMatches, 6);
-    const directionalConfidence = Math.max(danceScore, catchScore, runScore);
-    const alignmentNeutral = model.alignment === "mixed";
-    const nearMidRange = model.rangePosition != null && model.rangePosition >= 35 && model.rangePosition <= 65;
-    const nearVwapOrMixed = c.nearVwap || alignmentNeutral;
-    const watchMatches = [
-      directionalConfidence < 60,
-      nearVwapOrMixed,
-      nearMidRange,
-      !c.volumeStrong,
-      !c.oneBull && !c.oneBear,
-      !c.fiveBull && !c.fiveBear,
-    ].filter(Boolean).length;
-    const watchScore = scorePercent(watchMatches, 6);
-
-    let state = "watch";
-    let reason = "訊號矛盾、強度不足，或關鍵指標尚未齊全，維持觀察。";
-    if (!healthy) {
-      reason = "資料不是最新 LIVE 狀態，禁止用舊數據產生進攻訊號。";
-    } else if (runMatches >= 4 && c.belowVwap && (c.fiveBear || c.weakZone)) {
-      state = "run";
-      reason = "價格跌破 VWAP，且 5Min 結構或日內位置同步轉弱；風險條件達標。";
-    } else if (danceMatches >= 5 && c.aboveVwap && c.oneBull && c.fiveBull) {
-      state = "dance";
-      reason = "價格、VWAP、1Min 與 5Min 動能形成偏多共振；順勢進攻條件達標。";
-    } else if (catchMatches >= 3 && c.nearVwap && c.fiveStructureHeld && !c.fiveBear) {
-      state = "catch";
-      reason = "價格回到 VWAP 附近，但 5Min EMA20 結構仍守住，短線出現承接條件。";
-    }
-
-    return {
-      state, reason,
-      conditions: [
-        condition("價格高於 VWAP +0.15%", c.aboveVwap, model.vwapDistancePct != null),
-        condition("價格位於日內 60% 以上", c.strongZone, model.rangePosition != null),
-        condition("1Min 動能／排列偏多", c.oneBull, model.one.momentumPct != null || model.one.ema9 != null),
-        condition("5Min 動能／排列偏多", c.fiveBull, model.five.momentumPct != null || model.five.ema9 != null),
-        condition("5Min RSI 52–75", c.rsiStrong, model.five.rsi14 != null),
-        condition("1Min 量能 ≥ 20期均量 1.15x", c.volumeStrong, model.volumeRatio != null),
-        condition("價格接近 VWAP ±0.35%", c.nearVwap, model.vwapDistancePct != null),
-        condition("5Min 收盤守住 EMA20", c.fiveStructureHeld, model.five.latestClose != null && model.five.ema20 != null),
-        condition("價格低於 VWAP -0.35%", c.belowVwap, model.vwapDistancePct != null),
-        condition("1Min 與 5Min 同向", model.alignment !== "mixed", model.one.trend !== "neutral" && model.five.trend !== "neutral"),
-      ],
-      scores: { danceScore, catchScore, watchScore, runScore },
-    };
+    const danceMatches=[c.aboveVwap,c.strongZone,c.oneBull,c.fiveBull,c.rsiStrong,c.volumeStrong,model.alignment==="bullish"].filter(Boolean).length;
+    const runMatches=[c.belowVwap,c.weakZone,c.oneBear,c.fiveBear,c.rsiWeak,model.alignment==="bearish"].filter(Boolean).length;
+    const catchMatches=[c.nearVwap,c.fiveStructureHeld,c.oneBull,model.rangePosition!=null&&model.rangePosition>=25&&model.rangePosition<=65,model.one.rsi14!=null&&model.one.rsi14>=45].filter(Boolean).length;
+    const danceScore=scorePercent(danceMatches,7), catchScore=scorePercent(catchMatches,5), runScore=scorePercent(runMatches,6);
+    const directionalConfidence=Math.max(danceScore,catchScore,runScore);
+    const alignmentNeutral=model.alignment==="mixed", nearMidRange=model.rangePosition!=null&&model.rangePosition>=35&&model.rangePosition<=65, nearVwapOrMixed=c.nearVwap||alignmentNeutral;
+    const watchMatches=[directionalConfidence<60,nearVwapOrMixed,nearMidRange,!c.volumeStrong,!c.oneBull&&!c.oneBear,!c.fiveBull&&!c.fiveBear].filter(Boolean).length;
+    const watchScore=scorePercent(watchMatches,6);
+    let state="watch", reason="訊號矛盾、強度不足，或關鍵指標尚未齊全，維持觀察。";
+    if (!healthy) reason="資料不是最新 LIVE 狀態，禁止用舊數據產生進攻訊號。";
+    else if (runMatches>=4 && c.belowVwap && (c.fiveBear||c.weakZone)) { state="run"; reason="價格跌破 VWAP，且 5Min 結構或日內位置同步轉弱；風險條件達標。"; }
+    else if (danceMatches>=5 && c.aboveVwap && c.oneBull && c.fiveBull) { state="dance"; reason="價格、VWAP、1Min 與 5Min 動能形成偏多共振；順勢進攻條件達標。"; }
+    else if (catchMatches>=3 && c.nearVwap && c.fiveStructureHeld && !c.fiveBear) { state="catch"; reason="價格回到 VWAP 附近，但 5Min EMA20 結構仍守住，短線出現承接條件。"; }
+    return { state, reason, conditions:[
+      condition("價格高於 VWAP +0.15%",c.aboveVwap,model.vwapDistancePct!=null), condition("價格位於日內 60% 以上",c.strongZone,model.rangePosition!=null),
+      condition("1Min 動能／排列偏多",c.oneBull,model.one.momentumPct!=null||model.one.ema9!=null), condition("5Min 動能／排列偏多",c.fiveBull,model.five.momentumPct!=null||model.five.ema9!=null),
+      condition("5Min RSI 52–75",c.rsiStrong,model.five.rsi14!=null), condition("1Min 量能 ≥ 20期均量 1.15x",c.volumeStrong,model.volumeRatio!=null),
+      condition("價格接近 VWAP ±0.35%",c.nearVwap,model.vwapDistancePct!=null), condition("5Min 收盤守住 EMA20",c.fiveStructureHeld,model.five.latestClose!=null&&model.five.ema20!=null),
+      condition("價格低於 VWAP -0.35%",c.belowVwap,model.vwapDistancePct!=null), condition("1Min 與 5Min 同向",model.alignment!=="mixed",model.one.trend!=="neutral"&&model.five.trend!=="neutral")
+    ], scores:{danceScore,catchScore,watchScore,runScore} };
   }
 
   function scoreDeltas(scores) {
-    if (!previousScores) return { dance: null, catch: null, watch: null, run: null };
-    return {
-      dance: scores.danceScore - previousScores.danceScore,
-      catch: scores.catchScore - previousScores.catchScore,
-      watch: scores.watchScore - previousScores.watchScore,
-      run: scores.runScore - previousScores.runScore,
-    };
+    if (!previousScores) return { dance:null, catch:null, watch:null, run:null };
+    return { dance:scores.danceScore-previousScores.danceScore, catch:scores.catchScore-previousScores.catchScore, watch:scores.watchScore-previousScores.watchScore, run:scores.runScore-previousScores.runScore };
   }
-
-  function timeframeStateScore(metrics, bars) {
-    const latest = bars.at(-1) ?? null;
-    const priorBars = bars.slice(0, -1);
-    if (!latest || priorBars.length < 2) return null;
-    const close = finite(latest.c);
-    const open = finite(latest.o);
-    const volume = finite(latest.v);
-    const priorVolumes = priorBars.slice(-20).map((bar) => finite(bar.v)).filter((value) => value != null);
-    const averageVolume = priorVolumes.length ? priorVolumes.reduce((sum, value) => sum + value, 0) / priorVolumes.length : null;
-    const volumeRatio = volume != null && averageVolume ? volume / averageVolume : null;
-    const bullish = metrics.trend === "bullish" || (metrics.momentumPct != null && metrics.momentumPct >= 0.08);
-    const bearish = metrics.trend === "bearish" || (metrics.momentumPct != null && metrics.momentumPct <= -0.08);
-    const aboveEma20 = close != null && metrics.ema20 != null && close >= metrics.ema20;
-    const belowEma20 = close != null && metrics.ema20 != null && close < metrics.ema20;
-    const rsiStrong = metrics.rsi14 != null && metrics.rsi14 >= 52 && metrics.rsi14 <= 75;
-    const rsiWeak = metrics.rsi14 != null && metrics.rsi14 < 45;
-    const greenBar = close != null && open != null && close >= open;
-    const redBar = close != null && open != null && close < open;
-    const volumeStrong = volumeRatio != null && volumeRatio >= 1.15;
-    const nearNeutral = metrics.rsi14 != null && metrics.rsi14 >= 45 && metrics.rsi14 <= 55;
-
-    const dance = scorePercent([bullish,aboveEma20,rsiStrong,greenBar,volumeStrong].filter(Boolean).length, 5);
-    const catchScore = scorePercent([aboveEma20,!bearish,nearNeutral || greenBar,metrics.momentumPct != null && metrics.momentumPct >= -0.12,volumeRatio == null || volumeRatio >= 0.8].filter(Boolean).length, 5);
-    const run = scorePercent([bearish,belowEma20,rsiWeak,redBar,volumeStrong].filter(Boolean).length, 5);
-    const directionalConfidence = Math.max(dance, catchScore, run);
-    const watch = scorePercent([directionalConfidence < 60,metrics.trend === "neutral",nearNeutral,!volumeStrong,!bullish && !bearish].filter(Boolean).length, 5);
-    return { dance, catch: catchScore, watch, run };
+  function timeframeStateScore(metrics,bars) {
+    const latest=bars.at(-1)??null, priorBars=bars.slice(0,-1);
+    if (!latest || priorBars.length<2) return null;
+    const close=finite(latest.c), open=finite(latest.o), volume=finite(latest.v);
+    const priorVolumes=priorBars.slice(-20).map((bar)=>finite(bar.v)).filter((value)=>value!=null);
+    const averageVolume=priorVolumes.length ? priorVolumes.reduce((sum,value)=>sum+value,0)/priorVolumes.length : null;
+    const volumeRatio=volume!=null&&averageVolume ? volume/averageVolume : null;
+    const bullish=metrics.trend==="bullish" || (metrics.momentumPct!=null&&metrics.momentumPct>=0.08);
+    const bearish=metrics.trend==="bearish" || (metrics.momentumPct!=null&&metrics.momentumPct<=-0.08);
+    const aboveEma20=close!=null&&metrics.ema20!=null&&close>=metrics.ema20;
+    const belowEma20=close!=null&&metrics.ema20!=null&&close<metrics.ema20;
+    const rsiStrong=metrics.rsi14!=null&&metrics.rsi14>=52&&metrics.rsi14<=75;
+    const rsiWeak=metrics.rsi14!=null&&metrics.rsi14<45;
+    const bodyPositive=close!=null&&open!=null&&close>=open;
+    const bodyNegative=close!=null&&open!=null&&close<open;
+    const volumeStrong=volumeRatio!=null&&volumeRatio>=1.15;
+    return { dance:scorePercent([bullish,aboveEma20,rsiStrong,bodyPositive,volumeStrong].filter(Boolean).length,5), catch:scorePercent([aboveEma20,!bearish,metrics.rsi14!=null&&metrics.rsi14>=45,bodyPositive].filter(Boolean).length,4), watch:scorePercent([!bullish&&!bearish,metrics.rsi14!=null&&metrics.rsi14>=45&&metrics.rsi14<=55,!volumeStrong].filter(Boolean).length,3), run:scorePercent([bearish,belowEma20,rsiWeak,bodyNegative].filter(Boolean).length,4) };
   }
-
-  function timeframeScoreForBars(bars) {
-    if (!Array.isArray(bars) || bars.length < 3) return null;
-    const metrics = timeframeMetrics(bars);
-    return timeframeStateScore(metrics, bars);
+  function completedBars(bars,timeframeMinutes) {
+    const now=Date.now(), duration=timeframeMinutes*60*1000;
+    return bars.filter((bar)=>{ const startedAt=new Date(bar?.t).getTime(); return Number.isFinite(startedAt)&&startedAt+duration<=now; });
   }
-
-  function completedTimeframeBars(bars, timeframeMinutes, nowMs = Date.now()) {
-    if (!Array.isArray(bars) || !Number.isFinite(timeframeMinutes) || timeframeMinutes <= 0) return [];
-    const durationMs = timeframeMinutes * 60 * 1000;
-    return bars.filter((bar) => {
-      const startMs = new Date(bar?.t).getTime();
-      return Number.isFinite(startMs) && startMs + durationMs <= nowMs;
-    });
+  function calculateTimeframeDeltaForBars(bars,timeframeMinutes) {
+    const completed=completedBars(bars,timeframeMinutes);
+    const currentBars=completed.slice(0,-1), previousBars=completed.slice(0,-2);
+    if (currentBars.length<2||previousBars.length<2) return {dance:null,catch:null,watch:null,run:null};
+    const currentMetrics=timeframeMetrics(currentBars), previousMetrics=timeframeMetrics(previousBars);
+    const currentScores=timeframeStateScore(currentMetrics,currentBars), previousScoresForBar=timeframeStateScore(previousMetrics,previousBars);
+    if (!currentScores||!previousScoresForBar) return {dance:null,catch:null,watch:null,run:null};
+    return { dance:currentScores.dance-previousScoresForBar.dance, catch:currentScores.catch-previousScoresForBar.catch, watch:currentScores.watch-previousScoresForBar.watch, run:currentScores.run-previousScoresForBar.run };
   }
-
-  function calculateTimeframeDeltaForBars(bars, timeframeMinutes) {
-    const completedBars = completedTimeframeBars(bars, timeframeMinutes);
-    if (completedBars.length < 4) return { dance:null, catch:null, watch:null, run:null };
-    const currentScores = timeframeScoreForBars(completedBars);
-    const previousScoresForBar = timeframeScoreForBars(completedBars.slice(0, -1));
-    if (!currentScores || !previousScoresForBar) return { dance:null, catch:null, watch:null, run:null };
-    return {
-      dance: currentScores.dance - previousScoresForBar.dance,
-      catch: currentScores.catch - previousScoresForBar.catch,
-      watch: currentScores.watch - previousScoresForBar.watch,
-      run: currentScores.run - previousScoresForBar.run,
-    };
-  }
-
-  function calculateTimeframeStateScores(model) {
-    return {
-      one: calculateTimeframeDeltaForBars(model.bars1Min, 1),
-      five: calculateTimeframeDeltaForBars(model.bars5Min, 5),
-    };
-  }
-
-  function stateLight(score, delta) {
+  function calculateTimeframeStateScores(model) { return { one:calculateTimeframeDeltaForBars(model.bars1Min,1), five:calculateTimeframeDeltaForBars(model.bars5Min,5) }; }
+  function stateLight(score,delta) {
     if (!Number.isFinite(score)) return "🔴";
-    if (!Number.isFinite(delta)) return score >= 70 ? "🟢" : score >= 40 ? "🟡" : "🔴";
-    if (score >= 70 && delta <= -20) return "🟡";
-    if (score >= 70 || (score >= 60 && delta >= 10)) return "🟢";
-    if (score >= 40) return "🟡";
+    if (!Number.isFinite(delta)) return score>=70?"🟢":score>=40?"🟡":"🔴";
+    if (score>=70&&delta<=-20) return "🟡";
+    if (score>=70||(score>=60&&delta>=10)) return "🟢";
+    if (score>=40) return "🟡";
     return "🔴";
   }
 
-  function fmt(value, digits = 2, suffix = "") {
-    return Number.isFinite(value) ? value.toFixed(digits) + suffix : "—";
+  function fmt(value,digits=2,suffix="") { return Number.isFinite(value) ? value.toFixed(digits)+suffix : "—"; }
+  function setText(id,value) { const el=document.getElementById(id); if (el) el.textContent=value ?? "—"; }
+  function setSemantic(id,type) {
+    const el=document.getElementById(id); if (!el) return;
+    el.classList.remove("positive","negative","neutral");
+    el.classList.add(type==="positive"?"positive":type==="negative"?"negative":"neutral");
+  }
+  function trendLabel(trend) { return trend==="bullish"?"Bullish":trend==="bearish"?"Bearish":trend==="neutral"?"Neutral":"—"; }
+  function trendSemantic(trend) { return trend==="bullish"?"positive":trend==="bearish"?"negative":"neutral"; }
+  function ageText(marketTime) { const ms=new Date(marketTime).getTime(); return Number.isFinite(ms)?Math.max(0,Math.round((Date.now()-ms)/1000))+"s":"—"; }
+  function timeText(value) { const ms=new Date(value).getTime(); return Number.isFinite(ms)?new Date(ms).toLocaleString("zh-TW",{hour12:false}):"—"; }
+
+  function setDelta(state,value) {
+    const el=document.getElementById("delta-"+state); if (!el) return;
+    el.classList.remove("positive","negative");
+    if (!Number.isFinite(value)) { el.textContent="—"; return; }
+    el.textContent=value>0?"+"+value:String(value); if (value>0) el.classList.add("positive"); else if (value<0) el.classList.add("negative");
+  }
+  function setTimeframeDelta(timeframe,state,value) {
+    const el=document.getElementById("tf"+timeframe+"-"+state); if (!el) return;
+    el.classList.remove("positive","negative");
+    if (!Number.isFinite(value)) { el.textContent="—"; return; }
+    el.textContent=value>0?"+"+value:String(value); if (value>0) el.classList.add("positive"); else if (value<0) el.classList.add("negative");
+  }
+  function setLight(state,score,delta) { setText("light-"+state,stateLight(score,delta)); }
+  function renderHealth(type,message) {
+    const el=document.getElementById("dataHealth"); if (el) el.dataset.health=type;
+    setText("healthLabel",type.toUpperCase()+" · "+message);
+    const success=lastSuccessAt?new Date(lastSuccessAt).toLocaleTimeString("zh-TW",{hour12:false}):"—";
+    const market=lastMarketAt?new Date(lastMarketAt).toLocaleString("zh-TW",{hour12:false}):"—";
+    setText("healthTime","接收 "+success+" · 市場資料 "+market);
+    setText("market-status",type.toUpperCase());
+    setSemantic("market-status",type==="live"?"positive":type==="error"?"negative":"neutral");
   }
 
-  function setText(id, value) {
-    document.getElementById(id).textContent = value;
-  }
-
-  function setDelta(state, value) {
-    const el = document.getElementById("delta-" + state);
-    el.classList.remove("positive", "negative");
-    if (!Number.isFinite(value)) {
-      el.textContent = "—";
-      return;
-    }
-    el.textContent = value > 0 ? "+" + value : String(value);
-    if (value > 0) el.classList.add("positive");
-    else if (value < 0) el.classList.add("negative");
-  }
-
-  function setTimeframeDelta(timeframe, state, value) {
-    const el = document.getElementById("tf" + timeframe + "-" + state);
-    el.classList.remove("positive", "negative");
-    if (!Number.isFinite(value)) {
-      el.textContent = "—";
-      return;
-    }
-    el.textContent = value > 0 ? "+" + value : String(value);
-    if (value > 0) el.classList.add("positive");
-    else if (value < 0) el.classList.add("negative");
-  }
-
-  function setLight(state, score, delta) {
-    setText("light-" + state, stateLight(score, delta));
-  }
-
-  function renderHealth(type, message) {
-    const el = document.getElementById("dataHealth");
-    el.dataset.health = type;
-    setText("healthLabel", type.toUpperCase() + " · " + message);
-    const success = lastSuccessAt ? new Date(lastSuccessAt).toLocaleTimeString("zh-TW",{hour12:false}) : "—";
-    const market = lastMarketAt ? new Date(lastMarketAt).toLocaleString("zh-TW",{hour12:false}) : "—";
-    setText("healthTime", "接收 " + success + " · 市場資料 " + market);
-  }
-
-  function renderMarketData(model, decision, healthy, deltas = null, timeframeDeltas = null) {
-    const price = model.price;
+  function renderMarketData(model,decision,healthy,deltas=null,timeframeDeltas=null) {
+    const price=model.price;
     if (!Number.isFinite(price)) throw new Error("No SNDK price returned");
-    setText("price", "$" + price.toFixed(2));
-    const previousClose = finite(model.prevDailyBar?.c);
-    const changeEl = document.getElementById("change");
-    if (previousClose) {
-      const change = price - previousClose;
-      const pct = change / previousClose * 100;
-      const sign = change >= 0 ? "+" : "";
-      changeEl.textContent = sign + change.toFixed(2) + "  (" + sign + pct.toFixed(2) + "%)";
-      changeEl.className = "change " + (change >= 0 ? "positive" : "negative");
-    }
-    const metric = (id,value,integer=false) => setText(id,
-      Number.isFinite(finite(value)) ? (integer ? Math.round(value).toLocaleString() : "$"+Number(value).toFixed(2)) : "—");
-    metric("low",model.dailyBar?.l); metric("high",model.dailyBar?.h);
-    metric("vwap",model.dailyBar?.vw); metric("volume",model.dailyBar?.v,true);
+    setText("price","$"+price.toFixed(2));
+    setText("tech-current","$"+price.toFixed(2));
+    const previousClose=finite(model.prevDailyBar?.c), changeEl=document.getElementById("change");
+    if (previousClose && changeEl) {
+      const change=price-previousClose, pct=change/previousClose*100, sign=change>=0?"+":"";
+      changeEl.textContent=sign+change.toFixed(2)+"  ("+sign+pct.toFixed(2)+"%)";
+      changeEl.className="change "+(change>=0?"positive":"negative");
+    } else if (changeEl) { changeEl.textContent="—"; changeEl.className="change neutral"; }
+    const metric=(id,value,integer=false)=>setText(id,Number.isFinite(finite(value))?(integer?Math.round(Number(value)).toLocaleString():"$"+Number(value).toFixed(2)):"—");
+    metric("low",model.dailyBar?.l); metric("high",model.dailyBar?.h); metric("vwap",model.dailyBar?.vw); metric("volume",model.dailyBar?.v,true);
 
-    document.querySelectorAll(".signal").forEach((el) => el.classList.toggle("active",el.dataset.state===decision.state));
+    document.querySelectorAll(".signal").forEach((el)=>el.classList.toggle("active",el.dataset.state===decision.state));
     const names={dance:"🕺 蹦迪",catch:"🤲 接妹",watch:"👀 觀察",run:"🏃 烙跑"};
     setText("activeState",names[decision.state]+" ACTIVE");
-    setText("score-dance",decision.scores.danceScore);
-    setText("score-catch",decision.scores.catchScore);
-    setText("score-watch",decision.scores.watchScore);
-    setText("score-run",decision.scores.runScore);
-    const renderedDeltas = deltas ?? lastRenderedDeltas;
-    if (renderedDeltas) {
-      setDelta("dance",renderedDeltas.dance);
-      setDelta("catch",renderedDeltas.catch);
-      setDelta("watch",renderedDeltas.watch);
-      setDelta("run",renderedDeltas.run);
-    }
-    const renderedTimeframeDeltas = timeframeDeltas ?? lastRenderedTimeframeDeltas;
-    if (renderedTimeframeDeltas) {
-      ["dance","catch","watch","run"].forEach((state)=>{
-        setTimeframeDelta("1",state,renderedTimeframeDeltas.one?.[state] ?? null);
-        setTimeframeDelta("5",state,renderedTimeframeDeltas.five?.[state] ?? null);
-      });
-    }
-    setLight("dance",decision.scores.danceScore,renderedDeltas?.dance ?? null);
-    setLight("catch",decision.scores.catchScore,renderedDeltas?.catch ?? null);
-    setLight("watch",decision.scores.watchScore,renderedDeltas?.watch ?? null);
-    setLight("run",decision.scores.runScore,renderedDeltas?.run ?? null);
+    setText("score-dance",decision.scores.danceScore); setText("score-catch",decision.scores.catchScore); setText("score-watch",decision.scores.watchScore); setText("score-run",decision.scores.runScore);
+    const renderedDeltas=deltas??lastRenderedDeltas;
+    if (renderedDeltas) { setDelta("dance",renderedDeltas.dance); setDelta("catch",renderedDeltas.catch); setDelta("watch",renderedDeltas.watch); setDelta("run",renderedDeltas.run); }
+    const renderedTimeframeDeltas=timeframeDeltas??lastRenderedTimeframeDeltas;
+    if (renderedTimeframeDeltas) ["dance","catch","watch","run"].forEach((state)=>{ setTimeframeDelta("1",state,renderedTimeframeDeltas.one?.[state]??null); setTimeframeDelta("5",state,renderedTimeframeDeltas.five?.[state]??null); });
+    setLight("dance",decision.scores.danceScore,renderedDeltas?.dance??null); setLight("catch",decision.scores.catchScore,renderedDeltas?.catch??null); setLight("watch",decision.scores.watchScore,renderedDeltas?.watch??null); setLight("run",decision.scores.runScore,renderedDeltas?.run??null);
     setText("decisionReason",decision.reason);
     setText("trendAlignment","1Min ↔ 5Min："+(model.alignment==="bullish"?"同向偏多":model.alignment==="bearish"?"同向偏空":"不一致／中性"));
 
-    setText("ema9-1m",fmt(model.one.ema9)); setText("ema20-1m",fmt(model.one.ema20));
-    setText("rsi14-1m",fmt(model.one.rsi14,1)); setText("momentum-1m",fmt(model.one.momentumPct,2,"%"));
-    setText("volume-ratio",fmt(model.volumeRatio,2,"x")); setText("trend-1m",model.one.trend);
-    setText("ema9-5m",fmt(model.five.ema9)); setText("ema20-5m",fmt(model.five.ema20));
-    setText("rsi14-5m",fmt(model.five.rsi14,1)); setText("momentum-5m",fmt(model.five.momentumPct,2,"%"));
-    setText("range-position",fmt(model.rangePosition,0,"%")); setText("vwap-distance",fmt(model.vwapDistancePct,2,"%"));
+    setText("ema9-1m",fmt(model.one.ema9)); setText("ema20-1m",fmt(model.one.ema20)); setText("rsi14-1m",fmt(model.one.rsi14,1)); setText("momentum-1m",fmt(model.one.momentumPct,2,"%"));
+    setText("volume-ratio",fmt(model.volumeRatio,2,"x")); setText("trend-1m",trendLabel(model.one.trend)); setSemantic("trend-1m",trendSemantic(model.one.trend));
+    setText("ema9-5m",fmt(model.five.ema9)); setText("ema20-5m",fmt(model.five.ema20)); setText("rsi14-5m",fmt(model.five.rsi14,1)); setText("momentum-5m",fmt(model.five.momentumPct,2,"%"));
+    setText("trend-5m",trendLabel(model.five.trend)); setSemantic("trend-5m",trendSemantic(model.five.trend));
+    setText("range-position",fmt(model.rangePosition,0,"%"));
+    setText("market-timestamp",timeText(model.marketTime)); setText("data-age",ageText(model.marketTime));
+    setText("market-status",healthy?"LIVE":"STALE"); setSemantic("market-status",healthy?"positive":"neutral");
+    setText("latency-fetch",lastLatency?lastLatency.fetchMs+"ms":"—"); setText("latency-render",lastLatency?lastLatency.renderMs+"ms":"—"); setText("latency-total",lastLatency?lastLatency.totalMs+"ms":"—");
 
-    document.getElementById("conditions").innerHTML=decision.conditions.map((item)=>{
-      const cls=item.passed===true?"pass":item.passed===false?"fail":"";
-      const icon=item.passed===true?"✓":item.passed===false?"✕":"—";
-      return '<div class="condition '+cls+'">'+icon+" "+item.label+"</div>";
-    }).join("");
+    const conditions=document.getElementById("conditions");
+    if (conditions) conditions.innerHTML=decision.conditions.map((item)=>{ const cls=item.passed===true?"pass":item.passed===false?"fail":""; const icon=item.passed===true?"✓":item.passed===false?"✕":"—"; return '<div class="condition '+cls+'">'+icon+" "+item.label+"</div>"; }).join("");
 
     const parts=["Alpaca IEX "+(healthy?"connected ✓":"data not live"),"API "+(model.version??"snapshot")];
-    if (lastLatency) parts.push("latency "+lastLatency.fetchMs+"ms fetch · "+lastLatency.renderMs+"ms render · "+lastLatency.totalMs+"ms total");
     setText("status",parts.join(" · "));
   }
 
   async function loadSNDK() {
     if (requestInFlight) return;
-    requestInFlight = true;
-    const sequence = ++requestSequence;
-    const startedAt = performance.now();
-    let responseReceivedAt = null;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
+    requestInFlight=true;
+    const sequence=++requestSequence, startedAt=performance.now();
+    let responseReceivedAt=null;
+    const controller=new AbortController(), timeoutId=setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
     try {
-      const response = await fetch(FUNCTION_URL+"?t="+Date.now(),{
-        method:"GET",cache:"no-store",headers:{Accept:"application/json"},signal:controller.signal,
-      });
-      const text = await response.text();
-      responseReceivedAt = performance.now();
-      let result;
-      try { result=text?JSON.parse(text):{}; } catch { throw new Error("HTTP "+response.status+": invalid JSON"); }
+      const response=await fetch(FUNCTION_URL+"?t="+Date.now(),{method:"GET",cache:"no-store",headers:{Accept:"application/json"},signal:controller.signal});
+      const text=await response.text(); responseReceivedAt=performance.now();
+      let result; try { result=text?JSON.parse(text):{}; } catch { throw new Error("HTTP "+response.status+": invalid JSON"); }
       if (!response.ok) throw new Error(result?.error||"HTTP "+response.status);
-      const payload=unwrapPayload(result);
-      if (payload.ok===false) throw new Error(payload.error||"market-data failed");
-      const data=normalizeMarketData(payload);
-      const marketMs=new Date(data.marketTime).getTime();
-      const healthy=Number.isFinite(marketMs) && Date.now()-marketMs<=STALE_AFTER_MS;
-      const model=buildTechnicalModel(data);
-      const decision=decideState(model,healthy);
-      if (!healthy) {
-        renderHealth("stale","市場資料超過 3 分鐘");
-        return;
-      }
-      if (sequence <= latestAppliedSequence) return;
-      const deltas=scoreDeltas(decision.scores);
-      const timeframeDeltas=calculateTimeframeStateScores(model);
-      const renderStartedAt = performance.now();
-      renderMarketData(model,decision,true,deltas,timeframeDeltas);
-      const renderCompletedAt = performance.now();
-      lastLatency={
-        sequence,
-        startedAt,
-        responseReceivedAt,
-        renderCompletedAt,
-        fetchMs:Math.round(responseReceivedAt-startedAt),
-        renderMs:Math.round(renderCompletedAt-renderStartedAt),
-        totalMs:Math.round(renderCompletedAt-startedAt),
-      };
-      lastModel=model;
-      lastRenderedDeltas={ ...deltas };
-      lastRenderedTimeframeDeltas={ one:{...timeframeDeltas.one}, five:{...timeframeDeltas.five} };
-      previousScores={ ...decision.scores };
-      latestAppliedSequence=sequence;
-      lastSuccessAt=Date.now();
-      lastMarketAt=marketMs;
-      renderHealth("live","資料正常");
-      console.debug("[market-data latency]",lastLatency);
+      const payload=unwrapPayload(result); if (payload.ok===false) throw new Error(payload.error||"market-data failed");
+      const data=normalizeMarketData(payload), marketMs=new Date(data.marketTime).getTime();
+      const healthy=Number.isFinite(marketMs)&&Date.now()-marketMs<=STALE_AFTER_MS;
+      const model=buildTechnicalModel(data), decision=decideState(model,healthy);
+      if (!healthy) { renderHealth("stale","市場資料超過 3 分鐘"); return; }
+      if (sequence<=latestAppliedSequence) return;
+      const deltas=scoreDeltas(decision.scores), timeframeDeltas=calculateTimeframeStateScores(model);
+      const renderStartedAt=performance.now(); renderMarketData(model,decision,true,deltas,timeframeDeltas); const renderCompletedAt=performance.now();
+      lastLatency={sequence,startedAt,responseReceivedAt,renderCompletedAt,fetchMs:Math.round(responseReceivedAt-startedAt),renderMs:Math.round(renderCompletedAt-renderStartedAt),totalMs:Math.round(renderCompletedAt-startedAt)};
+      setText("latency-fetch",lastLatency.fetchMs+"ms"); setText("latency-render",lastLatency.renderMs+"ms"); setText("latency-total",lastLatency.totalMs+"ms");
+      lastModel=model; lastRenderedDeltas={...deltas}; lastRenderedTimeframeDeltas={one:{...timeframeDeltas.one},five:{...timeframeDeltas.five}}; previousScores={...decision.scores}; latestAppliedSequence=sequence; lastSuccessAt=Date.now(); lastMarketAt=marketMs;
+      renderHealth("live","資料正常"); console.debug("[market-data latency]",lastLatency);
     } catch(error) {
-      const message=error?.name==="AbortError"?"request timeout":(error?.message||String(error));
-      renderHealth("error",message);
-      if (lastModel) {
-        const decision=decideState(lastModel,false);
-        renderMarketData(lastModel,decision,false,lastRenderedDeltas,lastRenderedTimeframeDeltas);
-      } else {
-        setText("decisionReason","資料錯誤，且沒有可標示時間的有效資料。");
-      }
-    } finally {
-      clearTimeout(timeoutId);
-      requestInFlight=false;
-    }
+      const message=error?.name==="AbortError"?"request timeout":(error?.message||String(error)); renderHealth("error",message);
+      if (lastModel) { const decision=decideState(lastModel,false); renderMarketData(lastModel,decision,false,lastRenderedDeltas,lastRenderedTimeframeDeltas); }
+      else setText("decisionReason","資料錯誤，且沒有可標示時間的有效資料。");
+    } finally { clearTimeout(timeoutId); requestInFlight=false; }
   }
-
   function scheduleNextPoll() {
     if (pollTimerId!==null) clearTimeout(pollTimerId);
-    pollTimerId=setTimeout(async()=>{
-      if (!document.hidden) await loadSNDK();
-      scheduleNextPoll();
-    },POLL_INTERVAL_MS);
+    pollTimerId=setTimeout(async()=>{ if (!document.hidden) await loadSNDK(); scheduleNextPoll(); },POLL_INTERVAL_MS);
   }
-
-  document.addEventListener("visibilitychange",()=>{
-    if (!document.hidden && !requestInFlight) loadSNDK();
-  });
-
-  loadSNDK();
-  scheduleNextPoll();
+  document.addEventListener("visibilitychange",()=>{ if (!document.hidden&&!requestInFlight) loadSNDK(); });
+  loadSNDK(); scheduleNextPoll();
 </script>
-
 </body>
 </html>
