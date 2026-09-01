@@ -209,12 +209,15 @@
 
   let pollTimerId = null;
   let requestInFlight = false;
+  let requestSequence = 0;
+  let latestAppliedSequence = 0;
   let lastSuccessAt = null;
   let lastMarketAt = null;
   let lastModel = null;
   let previousScores = null;
   let lastRenderedDeltas = null;
   let lastRenderedTimeframeDeltas = null;
+  let lastLatency = null;
 
   function unwrapPayload(result) {
     let payload = result;
@@ -602,12 +605,16 @@
     }).join("");
 
     const parts=["Alpaca IEX "+(healthy?"connected ✓":"data not live"),"API "+(model.version??"snapshot")];
+    if (lastLatency) parts.push("latency "+lastLatency.fetchMs+"ms fetch · "+lastLatency.renderMs+"ms render · "+lastLatency.totalMs+"ms total");
     setText("status",parts.join(" · "));
   }
 
   async function loadSNDK() {
     if (requestInFlight) return;
     requestInFlight = true;
+    const sequence = ++requestSequence;
+    const startedAt = performance.now();
+    let responseReceivedAt = null;
     const controller = new AbortController();
     const timeoutId = setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
     try {
@@ -615,6 +622,7 @@
         method:"GET",cache:"no-store",headers:{Accept:"application/json"},signal:controller.signal,
       });
       const text = await response.text();
+      responseReceivedAt = performance.now();
       let result;
       try { result=text?JSON.parse(text):{}; } catch { throw new Error("HTTP "+response.status+": invalid JSON"); }
       if (!response.ok) throw new Error(result?.error||"HTTP "+response.status);
@@ -622,25 +630,37 @@
       if (payload.ok===false) throw new Error(payload.error||"market-data failed");
       const data=normalizeMarketData(payload);
       const marketMs=new Date(data.marketTime).getTime();
-      lastSuccessAt=Date.now();
-      lastMarketAt=Number.isFinite(marketMs)?marketMs:null;
-      const healthy=lastMarketAt!=null && Date.now()-lastMarketAt<=STALE_AFTER_MS;
+      const healthy=Number.isFinite(marketMs) && Date.now()-marketMs<=STALE_AFTER_MS;
       const model=buildTechnicalModel(data);
       const decision=decideState(model,healthy);
       if (!healthy) {
-        lastModel=model;
-        renderMarketData(model,decision,false,lastRenderedDeltas,lastRenderedTimeframeDeltas);
         renderHealth("stale","市場資料超過 3 分鐘");
         return;
       }
+      if (sequence <= latestAppliedSequence) return;
       const deltas=scoreDeltas(decision.scores);
       const timeframeDeltas=calculateTimeframeStateScores(model);
-      lastModel=model;
+      const renderStartedAt = performance.now();
       renderMarketData(model,decision,true,deltas,timeframeDeltas);
+      const renderCompletedAt = performance.now();
+      lastLatency={
+        sequence,
+        startedAt,
+        responseReceivedAt,
+        renderCompletedAt,
+        fetchMs:Math.round(responseReceivedAt-startedAt),
+        renderMs:Math.round(renderCompletedAt-renderStartedAt),
+        totalMs:Math.round(renderCompletedAt-startedAt),
+      };
+      lastModel=model;
       lastRenderedDeltas={ ...deltas };
       lastRenderedTimeframeDeltas={ one:{...timeframeDeltas.one}, five:{...timeframeDeltas.five} };
       previousScores={ ...decision.scores };
+      latestAppliedSequence=sequence;
+      lastSuccessAt=Date.now();
+      lastMarketAt=marketMs;
       renderHealth("live","資料正常");
+      console.debug("[market-data latency]",lastLatency);
     } catch(error) {
       const message=error?.name==="AbortError"?"request timeout":(error?.message||String(error));
       renderHealth("error",message);
@@ -665,8 +685,7 @@
   }
 
   document.addEventListener("visibilitychange",()=>{
-    if (!document.hidden && !requestInFlight &&
-        (!lastSuccessAt || Date.now()-lastSuccessAt>=POLL_INTERVAL_MS)) loadSNDK();
+    if (!document.hidden && !requestInFlight) loadSNDK();
   });
 
   loadSNDK();
